@@ -12,15 +12,8 @@ export default function AuthPage() {
     e.preventDefault();
     const supabase = supabaseBrowser();
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        setMsg("Check your email to confirm, then sign in.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        setMsg("Signed in! You can navigate to other pages.");
-      }
+      // Log in/sign up useing the supabase object
+      // see https://supabase.com/docs/guides/auth/passwords for more details
     } catch (err: any) {
       setMsg(err.message || "Auth error");
     }

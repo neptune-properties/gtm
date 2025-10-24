@@ -10,9 +10,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <strong>Neptune</strong>
           <nav style={{ display: "flex", gap: 12 }}>
             <a href="/">Home</a>
-            <a href="/targets">Targets</a>
             <a href="/templates">Templates</a>
-            <a href="/campaigns">Campaigns</a>
             <a href="/auth">Auth</a>
           </nav>
         </header>

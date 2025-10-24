@@ -2,13 +2,12 @@
 - What does this PR change?
 
 ## Screenshots (if UI)
-<!-- drag-and-drop -->
+
 
 ## How to Test
 1. `pnpm install && pnpm dev`
-2. Steps to reproduce / verify
+2. --Steps to reproduce / verify--
 
 ## Checklist
 - [ ] Lints / builds locally
-- [ ] No secrets committed
-- [ ] Acceptance criteria met
+- [ ] No secrets committed (API keys, etc.)
