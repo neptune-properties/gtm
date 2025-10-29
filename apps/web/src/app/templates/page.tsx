@@ -1,14 +1,15 @@
 "use client"
 
+import { supabase } from "@/lib/supabaseClient"
 import { useEffect, useState } from "react"
 import { z, ZodError } from "zod"
 import {
-  getTemplates,
   createTemplate,
   updateTemplate,
   deleteTemplate,
   type EmailTemplate,
 } from "./data"
+
 
 // requirements for templates
 const TemplateSchema = z.object({
@@ -37,14 +38,30 @@ export default function TemplatesPage() {
     saving: false,
   })
 
-  useEffect(() => { // api call
-    async function fetchData() {
-      const t = await getTemplates()
-      setTemplates(t)
-      setLoading(false)
-    }
-    fetchData()
-  }, [])
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const res = await fetch("/api/templates");
+        const json = await res.json();
+
+        if (json.error) {
+          console.error("Error fetching templates:", json.error);
+          setTemplates([]);
+        } else {
+          console.log("Fetched templates:", json.templates);
+          setTemplates(json.templates || []);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setTemplates([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  fetchTemplates();
+}, []);
+
 
   // on change -> nav?
   function handleChange(

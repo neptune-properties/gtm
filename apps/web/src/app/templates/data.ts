@@ -1,5 +1,4 @@
-import { supabase } from "@/lib/supabaseClient"
-
+// apps/web/src/app/templates/data.ts
 export type EmailTemplate = {
   id: string
   name: string
@@ -9,59 +8,46 @@ export type EmailTemplate = {
   created_at?: string
 }
 
-// READ all templates
+const API_BASE = "/api/templates"
+
 export async function getTemplates(): Promise<EmailTemplate[]> {
-  const { data, error } = await supabase
-    .from("email_templates")
-    .select("*")
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("getTemplates error:", error)
-    return []
-  }
-
-  return data || []
+  const res = await fetch(API_BASE)
+  const json = await res.json()
+  if (json.error) throw new Error(json.error)
+  return json.templates || []
 }
 
-// CREATE new template
 export async function createTemplate(input: {
   name: string
   subject: string
   body_md: string
-  created_by?: string
 }) {
-  const { data, error } = await supabase
-    .from("email_templates")
-    .insert([input])
-    .select("*")
-    .single()
-
-  if (error) throw error
-  return data as EmailTemplate
+  const res = await fetch(API_BASE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  })
+  const json = await res.json()
+  if (json.error) throw new Error(json.error)
+  return json.template
 }
 
-// UPDATE template
 export async function updateTemplate(
   id: string,
   input: { name: string; subject: string; body_md: string }
 ) {
-  const { data, error } = await supabase
-    .from("email_templates")
-    .update(input)
-    .eq("id", id)
-    .select("*")
-    .single()
-
-  if (error) throw error
-  return data as EmailTemplate
+  const res = await fetch(`${API_BASE}?id=${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  })
+  const json = await res.json()
+  if (json.error) throw new Error(json.error)
+  return json.template
 }
 
-// DELETE template
 export async function deleteTemplate(id: string) {
-  const { error } = await supabase
-    .from("email_templates")
-    .delete()
-    .eq("id", id)
-  if (error) throw error
+  const res = await fetch(`${API_BASE}?id=${id}`, { method: "DELETE" })
+  const json = await res.json()
+  if (json.error) throw new Error(json.error)
 }
