@@ -1,10 +1,43 @@
 import { NextResponse } from "next/server";
+import { supabaseServer } from "@/lib/supabaseClient";
 
-export async function GET() {
-  return NextResponse.json({
-    targets: [
-      { id: "demo-1", owner_name: "Jane Doe", company: "Doe Holdings", property: "123 Maple St", city: "Ann Arbor", email: "jane@example.com", source: "apollo", status: "new" },
-      { id: "demo-2", owner_name: "John Smith", company: "Smith Ventures", property: "45 Oak Ave", city: "Detroit", email: "john@example.com", source: "csv", status: "emailed" }
-    ]
-  });
+export async function GET(req: Request) {
+  const supabase = supabaseServer();
+  const { searchParams } = new URL(req.url);
+
+  const city = searchParams.get("city");
+  const status = searchParams.get("status");
+  const mode = searchParams.get("mode");
+
+  if (mode === "distinct") {
+    const [citiesRes, statusesRes] = await Promise.all([
+      supabase.from("targets").select("city").not("city", "is", null),
+      supabase.from("targets").select("status").not("status", "is", null),
+    ]);
+
+    const uniqueCities = [
+      ...new Set((citiesRes.data || []).map((r) => r.city)),
+    ].filter(Boolean);
+    const uniqueStatuses = [
+      ...new Set((statusesRes.data || []).map((r) => r.status)),
+    ].filter(Boolean);
+
+    return NextResponse.json({
+      cities: uniqueCities,
+      statuses: uniqueStatuses,
+    });
+  }
+
+  let query = supabase.from("targets").select("*");
+  if (city) query = query.eq("city", city);
+  if (status) query = query.eq("status", status);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Supabase error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ targets: data });
 }
