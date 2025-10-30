@@ -35,7 +35,7 @@ export default function AuthPage() {
       if (error) throw error;
 
       setMsg("Success! Redirecting…");
-      router.push("/");
+      router.push("/targets");
     } catch (err: any) {
       setMsg(err?.message || "Auth error");
     } finally {
