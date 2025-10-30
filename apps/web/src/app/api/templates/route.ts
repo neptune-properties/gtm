@@ -1,28 +1,25 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabaseClient"
-import { createClient } from "@supabase/supabase-js"
+import { createUserSupabaseClient } from "@/lib/supabaseClient"
 
-function createUserSupabaseClient(token: string) {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { global: { headers: { Authorization: `Bearer ${token}` } } }
-  )
-}
 
 // Handles GET requests to /api/templates
-export async function GET() {
-  const { data, error } = await supabase
-    .from("email_templates")
-    .select("*")
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("Supabase error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+export async function GET(req: Request) {
+  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return NextResponse.json({ error: "Missing auth token" }, { status: 401 });
   }
 
-  return NextResponse.json({ templates: data || [] })
+  const supabase = createUserSupabaseClient(token);
+
+  const { data, error } = await supabase
+    .from("email_templates")
+    .select("*");
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ templates: data });
 }
 
 export async function POST(req: Request) {
@@ -32,12 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing auth token" }, { status: 401 })
     }
 
-    // ✅ Create a Supabase client scoped to the user’s session
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { global: { headers: { Authorization: `Bearer ${token}` } } }
-    )
+    const supabase = createUserSupabaseClient(token);
 
     const body = await req.json()
     const { name, subject, body_md } = body
