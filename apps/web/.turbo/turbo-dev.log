@@ -1,27 +1,26 @@
 
-
-> @neptune/web@0.1.0 dev /home/jialigood/neptune/gtm/apps/web
+
+> @neptune/web@0.1.0 dev /Users/nwlvrd/Atlas/gtm/apps/web
 > next dev
 
- [33m[1m⚠[22m[39m Port 3000 is in use by an unknown process, using available port 3001 instead.
- [33m[1m⚠[22m[39m `experimental.typedRoutes` has been moved to `typedRoutes`. Please update your next.config.mjs file accordingly.
- [33m[1m⚠[22m[39m Warning: Next.js inferred your workspace root, but it may not be correct.
- We detected multiple lockfiles and selected the directory of /home/jialigood/package-lock.json as the root directory.
- To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
-   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
- Detected additional lockfiles: 
-   * /home/jialigood/neptune/gtm/pnpm-lock.yaml
-
-   [1m[38;2;173;127;168m▲ Next.js 16.0.1[39m[22m (Turbopack)
-   - Local:        http://localhost:3001
-   - Network:      http://10.255.255.254:3001
-   - Environments: .env.local
-   - Experiments (use with caution):
-     [1m✓[22m typedRoutes
+  [1m[38;2;173;127;168m▲ Next.js 14.2.15[39m[22m
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · typedRoutes
 
  [32m[1m✓[22m[39m Starting...
- [31m[1m⨯[22m[39m Unable to acquire lock at [36m/home/jialigood/neptune/gtm/apps/web/.next/dev/lock[39m, is another instance of [36mnext dev[39m running?
- [37m[1m [22m[39m [1mSuggestion:[22m If you intended to restart [36mnext dev[39m, terminate the other process, and then try again.
+ [32m[1m✓[22m[39m Ready in 1197ms
+ [32m[1m✓[22m[39m Compiled / in 316ms (646 modules)
+ GET / [32m200[39m in 432ms
+ [32m[1m✓[22m[39m Compiled /templates in 261ms (674 modules)
+ GET /templates [32m200[39m in 315ms
+ [32m[1m✓[22m[39m Compiled /api/templates in 243ms (454 modules)
+ GET /api/templates [32m200[39m in 446ms
+ GET /api/templates [32m200[39m in 113ms
+ DELETE /api/templates?id=d993b5e4-fa85-4e8c-9aa6-1dae501a0e75 [32m200[39m in 74ms
+ [32m[1m✓[22m[39m Compiled /_not-found in 121ms (788 modules)
+ GET /targets [33m404[39m in 36ms
+ GET /api/templates [32m200[39m in 220ms
+ GET /api/templates [32m200[39m in 100ms
 [?25h
-[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 1.[39m
-[43m[30m WARN [39m[49m  Local package.json exists, but node_modules missing, did you mean to install?
