@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseClient";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   const supabase = supabaseServer();
   const { searchParams } = new URL(req.url);
