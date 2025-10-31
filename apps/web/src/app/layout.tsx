@@ -15,22 +15,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <main style={{ padding: 16 }}>{children}</main>
         ) : (
           <RequireAuth>
-            <header
-              style={{
-                padding: "12px 16px",
-                borderBottom: "1px solid #eee",
-                display: "flex",
-                gap: 16,
-              }}
-            >
-              <strong>Neptune</strong>
-              <nav style={{ display: "flex", gap: 12 }}>
-                <a href="/">Home</a>
-                <a href="/templates">Templates</a>
-                <a href="/auth">Auth</a>
-              </nav>
-            </header>
-
             <Nav />
             <main style={{ padding: 16 }}>{children}</main>
           </RequireAuth>
