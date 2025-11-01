@@ -15,7 +15,7 @@
     "@types/react-dom": "^19.2.2",
     "pnpm": "^10.20.0",
     "prettier": "^3.6.2",
-    "turbo": "^2.5.8"
+    "turbo": "^2.6.0"
   },
   "dependencies": {
     "react": "^19.2.0",
