@@ -1,10 +1,14 @@
-// Use React components to make our table layout (rough design is ok until we have full designs)
-
+import TargetsTable from '@/components/TargetsTable'
 
 export default function Home() {
   return (
-    <div>
-      <h1>Neptune — GTM MVP</h1>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+      <div style={{ padding: '32px 0' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px' }}>
+          <h1 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '32px' }}>Neptune — GTM MVP</h1>
+          <TargetsTable />
+        </div>
+      </div>
     </div>
   );
 }

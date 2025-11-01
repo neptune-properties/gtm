@@ -1,4 +1,3 @@
-// components/Nav.tsx
 'use client';
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -12,12 +11,12 @@ export default function Nav() {
   useEffect(() => {
     const supabase = supabaseBrowser();
 
-    // 1) get current session once
+    // Get current user
     supabase.auth.getUser().then(({ data }) => {
       setEmail(data.user?.email ?? null);
     });
 
-    // 2) keep in sync with future changes
+    // Keep session in sync
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setEmail(session?.user?.email ?? null);
     });
@@ -31,22 +30,39 @@ export default function Nav() {
   };
 
   return (
-    <nav style={{ display: "flex", gap: 12, padding: 12, borderBottom: "1px solid #eee" }}>
-      <Link href="/">Home</Link>
-      <Link href="/targets">Targets</Link>
-      <Link href="/templates">Templates</Link>
-      <Link href="/campaigns">Campaigns</Link>
+    <header
+      style={{
+        padding: "12px 16px",
+        borderBottom: "1px solid #eee",
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+      }}
+    >
+      {/* Neptune logo / title */}
+      <strong>Neptune</strong>
 
+      {/* Main nav links */}
+      <nav style={{ display: "flex", gap: 12 }}>
+        <Link href="/">Home</Link>
+        <Link href="/targets">Targets</Link>
+        <Link href="/templates">Templates</Link>
+        <Link href="/campaigns">Campaigns</Link>
+      </nav>
+
+      {/* Auth info / buttons */}
       <div style={{ marginLeft: "auto" }}>
         {email ? (
           <span>
             Signed in as <strong>{email}</strong>{" "}
-            <button onClick={signOut} style={{ marginLeft: 8 }}>Sign out</button>
+            <button onClick={signOut} style={{ marginLeft: 8 }}>
+              Sign out
+            </button>
           </span>
         ) : (
           <Link href="/auth">Sign in</Link>
         )}
       </div>
-    </nav>
+    </header>
   );
 }
