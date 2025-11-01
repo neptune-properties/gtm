@@ -1,0 +1,68 @@
+nohup: ignoring input
+
+> @neptune/web@0.1.0 dev /home/kritika/atlas_digital/gtm/apps/web
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+  ▲ Next.js 14.2.15
+  - Local:        http://localhost:3001
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · typedRoutes
+
+ ✓ Starting...
+ ✓ Ready in 1893ms
+ ○ Compiling /api/targets ...
+ ✓ Compiled /api/targets in 573ms (189 modules)
+ GET /api/targets 200 in 709ms
+ ✓ Compiled in 68ms
+ ✓ Compiled /api/targets in 202ms (189 modules)
+ GET /api/targets 200 in 302ms
+ GET /api/targets 200 in 11ms
+ GET /api/targets 200 in 28ms
+ GET /api/targets 200 in 11ms
+ ✓ Compiled in 152ms (189 modules)
+ ✓ Compiled in 83ms (189 modules)
+API route called - fetching targets...
+Supabase response: { data: [], error: null }
+Returning data: []
+ GET /api/targets 200 in 74ms
+ ✓ Compiled in 139ms (189 modules)
+API route called - fetching targets...
+Supabase response: { data: [], error: null }
+Data length: 0
+Returning data: []
+ GET /api/targets 200 in 228ms
+ ✓ Compiled in 122ms (189 modules)
+API route called - fetching targets...
+Count response: { count: 0, countError: null }
+Supabase response: { data: [], error: null }
+Data length: 0
+Returning data: []
+ GET /api/targets 200 in 175ms
+ ✓ Compiled in 17ms
+ ✓ Compiled /api/targets in 152ms (189 modules)
+API route called - fetching targets...
+Supabase response: { data: [], error: null }
+Returning data: []
+ GET /api/targets 200 in 326ms
+ ✓ Compiled in 109ms (189 modules)
+API route called - fetching targets...
+Supabase response: { data: [], error: null }
+Returning data: []
+ GET /api/targets 200 in 32ms
+API route called - fetching targets...
+Supabase response: { data: [], error: null }
+Returning data: []
+ GET /api/targets 200 in 10ms
+ ✓ Compiled in 163ms (189 modules)
+ ✓ Compiled in 101ms (189 modules)
+ ✓ Compiled in 39ms
+ ✓ Compiled /api/targets in 97ms (189 modules)
+API route called - fetching targets...
+Supabase URL: https://dniwjfwwilpctcxyxpdm.supabase.co
+Supabase response: { data: [], error: null }
+Returning data: []
+ GET /api/targets 200 in 129ms
+ ✓ Compiled in 93ms (189 modules)
+ ✓ Compiled in 48ms
