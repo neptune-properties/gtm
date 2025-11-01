@@ -1,78 +1,66 @@
-"use client"
+// apps/web/src/app/templates/page.tsx
+"use client";
 
-import { supabase } from "@/lib/supabaseClient"
-import { useEffect, useState } from "react"
-import { z, ZodError } from "zod"
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import {
+  getTemplates,
   createTemplate,
   updateTemplate,
   deleteTemplate,
   type EmailTemplate,
-} from "./data"
-
+} from "./data";
 
 // requirements for templates
 const TemplateSchema = z.object({
   name: z.string().min(1, "Template name is required"),
   subject: z.string().min(1, "Subject is required"),
   body_md: z.string().min(20, "Body must be at least 20 characters long"),
-})
+});
 
 type FormState = {
-  id?: string
-  name: string
-  subject: string
-  body_md: string
-  error?: string
-  saving: boolean
-}
+  id?: string;
+  name: string;
+  subject: string;
+  body_md: string;
+  error?: string;
+  saving: boolean;
+};
 
-// initialize states
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<EmailTemplate[]>([])
-  const [loading, setLoading] = useState(true)
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<FormState>({
     name: "",
     subject: "",
     body_md: "",
     saving: false,
-  })
+  });
 
+  // Fetches templates on root render
   useEffect(() => {
-    const fetchTemplates = async () => {
+    (async () => {
       try {
-        const res = await fetch("/api/templates");
-        const json = await res.json();
-
-        if (json.error) {
-          console.error("Error fetching templates:", json.error);
-          setTemplates([]);
-        } else {
-          console.log("Fetched templates:", json.templates);
-          setTemplates(json.templates || []);
-        }
+        const t = await getTemplates();
+        setTemplates(t);
       } catch (err) {
-        console.error("Fetch error:", err);
+        console.error("Error fetching templates:", err);
         setTemplates([]);
       } finally {
         setLoading(false);
       }
-    };
+    })();
+  }, []);
 
-  fetchTemplates();
-}, []);
-
-
-  // on change -> nav?
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
-    const { name, value } = e.target
-    setForm((f) => ({ ...f, [name]: value }))
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
   }
 
   function handleNew() {
-    setForm({ name: "", subject: "", body_md: "", saving: false })
+    setForm({ name: "", subject: "", body_md: "", saving: false });
   }
 
   function handleEdit(t: EmailTemplate) {
@@ -82,57 +70,59 @@ export default function TemplatesPage() {
       subject: t.subject,
       body_md: t.body_md,
       saving: false,
-    })
+    });
   }
 
   async function handleDelete(id: string) {
     try {
-      await deleteTemplate(id)
-      setTemplates((prev) => prev.filter((t) => t.id !== id))
-      if (form.id === id) handleNew()
+      await deleteTemplate(id);
+      setTemplates((prev) => prev.filter((t) => t.id !== id));
+      if (form.id === id) handleNew();
     } catch (err) {
-      console.error(err)
-      setForm((f) => ({ ...f, error: "Failed to delete template." }))
+      console.error(err);
+      setForm((f) => ({ ...f, error: "Failed to delete template." }));
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const parsed = TemplateSchema.safeParse(form)
+    e.preventDefault();
+    const parsed = TemplateSchema.safeParse(form);
     if (!parsed.success) {
-      setForm((f) => ({ ...f, error: parsed.error.errors[0].message }))
-      return
+      setForm((f) => ({ ...f, error: parsed.error.errors[0].message }));
+      return;
     }
 
-    setForm((f) => ({ ...f, saving: true, error: undefined }))
+    setForm((f) => ({ ...f, saving: true, error: undefined }));
     try {
       if (form.id) {
+        // update existing
         const updated = await updateTemplate(form.id, {
           name: form.name,
           subject: form.subject,
           body_md: form.body_md,
-        })
+        });
+        // depending on your route response, you may need updated.data
         setTemplates((prev) =>
           prev.map((t) => (t.id === updated.id ? updated : t))
-        )
+        );
       } else {
+        // create new
         const created = await createTemplate({
           name: form.name,
           subject: form.subject,
           body_md: form.body_md,
-        })
-        setTemplates((prev) => [created, ...prev])
+        });
+        setTemplates((prev) => [created, ...prev]);
       }
-      handleNew()
+      handleNew();
     } catch (err) {
-      console.error(err)
-      setForm((f) => ({ ...f, error: "Failed to save template." }))
+      console.error(err);
+      setForm((f) => ({ ...f, error: "Failed to save template." }));
     } finally {
-      setForm((f) => ({ ...f, saving: false }))
+      setForm((f) => ({ ...f, saving: false }));
     }
   }
 
-  // renders page by listing existing templates from Supabase
   return (
     <main className="max-w-5xl mx-auto p-6 flex flex-col gap-8">
       <h1 className="text-2xl font-semibold">Email Templates</h1>
@@ -183,8 +173,6 @@ export default function TemplatesPage() {
         </form>
       </section>
 
-      {/* renders list, including id, name, subject, and body */}
-      {/* also allows for edit, delete */}
       {/* LIST */}
       <section>
         <h2 className="text-lg font-medium mb-2">Existing Templates</h2>
@@ -202,9 +190,7 @@ export default function TemplatesPage() {
                 <div className="flex justify-between">
                   <div>
                     <strong>{t.name}</strong>
-                    <div className="text-sm text-gray-600">
-                      {t.subject}
-                    </div>
+                    <div className="text-sm text-gray-600">{t.subject}</div>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -230,5 +216,5 @@ export default function TemplatesPage() {
         )}
       </section>
     </main>
-  )
+  );
 }
