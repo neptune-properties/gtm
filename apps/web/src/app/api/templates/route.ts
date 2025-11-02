@@ -75,8 +75,6 @@ export async function PUT(req: Request) {
   return NextResponse.json({ template: data })
 }
 
-// -----------------------------------------------
-// DELETE (remove template)
 export async function DELETE(req: Request) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "")
   if (!token)
