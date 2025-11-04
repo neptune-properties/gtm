@@ -48,6 +48,7 @@ export default function Nav() {
         <Link href="/targets">Targets</Link>
         <Link href="/templates">Templates</Link>
         <Link href="/campaigns">Campaigns</Link>
+        <Link href={{ pathname: "/metrics" }}>Metrics</Link>
       </nav>
 
       {/* Auth info / buttons */}

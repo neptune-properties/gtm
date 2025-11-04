@@ -18,8 +18,10 @@
     "turbo": "^2.6.0"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "styled-components": "^6.1.19",
     "zod": "^4.1.12"
   }
 }
