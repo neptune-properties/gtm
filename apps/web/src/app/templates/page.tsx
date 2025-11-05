@@ -1,219 +1,263 @@
-// apps/web/src/app/templates/page.tsx
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { z } from "zod";
-import {
-  getTemplates,
-  createTemplate,
-  updateTemplate,
-  deleteTemplate,
-  type EmailTemplate,
-} from "./data";
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { z } from 'zod';
 
-// requirements for templates
-const TemplateSchema = z.object({
-  name: z.string().min(1, "Template name is required"),
-  subject: z.string().min(1, "Subject is required"),
-  body_md: z.string().min(20, "Body must be at least 20 characters long"),
-});
-
-type FormState = {
-  id?: string;
+type EmailTemplate = {
+  id: string;
   name: string;
   subject: string;
   body_md: string;
-  error?: string;
-  saving: boolean;
+};
+type Target = {
+  id: string;
+  owner_name: string;
+  company: string;
+  property: string;
+  city: string;
+  email: string;
+  status: 'new' | 'emailed' | 'replied' | 'called' | 'converted';
 };
 
-export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState<FormState>({
-    name: "",
-    subject: "",
-    body_md: "",
-    saving: false,
-  });
+const TemplateSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  subject: z.string(),
+  body_md: z.string(),
+});
 
-  // Fetches templates on root render
+export default function TemplatesPage() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const targetId = params.get('targetId') ?? '';
+
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [selectedId, setSelectedId] = useState<string>('');
+  const [selected, setSelected] = useState<EmailTemplate | null>(null);
+  const [target, setTarget] = useState<Target | null>(null);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // load templates
   useEffect(() => {
     (async () => {
       try {
-        const t = await getTemplates();
-        setTemplates(t);
-      } catch (err) {
-        console.error("Error fetching templates:", err);
+        const res = await fetch('/api/templates', { cache: 'no-store' });
+        const json = await res.json();
+        setTemplates(json.templates || []);
+      } catch (e) {
+        console.error(e);
         setTemplates([]);
-      } finally {
-        setLoading(false);
       }
     })();
   }, []);
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  }
-
-  function handleNew() {
-    setForm({ name: "", subject: "", body_md: "", saving: false });
-  }
-
-  function handleEdit(t: EmailTemplate) {
-    setForm({
-      id: t.id,
-      name: t.name,
-      subject: t.subject,
-      body_md: t.body_md,
-      saving: false,
-    });
-  }
-
-  async function handleDelete(id: string) {
-    try {
-      await deleteTemplate(id);
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
-      if (form.id === id) handleNew();
-    } catch (err) {
-      console.error(err);
-      setForm((f) => ({ ...f, error: "Failed to delete template." }));
+  // load target from URL parameters
+  useEffect(() => {
+    const targetName = params.get('targetName');
+    const targetCompany = params.get('targetCompany');
+    const targetProperty = params.get('targetProperty');
+    const targetEmail = params.get('targetEmail');
+    const targetCity = params.get('targetCity');
+    
+    if (targetId && targetName && targetEmail) {
+      setTarget({
+        id: targetId,
+        owner_name: targetName,
+        company: targetCompany || '',
+        property: targetProperty || '',
+        city: targetCity || '',
+        email: targetEmail,
+        status: 'new' as const, // We'll assume new for now
+      });
     }
-  }
+  }, [params, targetId]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const parsed = TemplateSchema.safeParse(form);
+  useEffect(() => {
+    const t = templates.find((x) => x.id === selectedId) || null;
+    setSelected(t);
+  }, [selectedId, templates]);
+
+  const substituted = useMemo(() => {
+    if (!selected || !target) return { subject: '', body: '' };
+    const data = {
+      owner_name: target.owner_name || '',
+      name: target.owner_name || '', // Alternative placeholder
+      company: target.company || '',
+      property: target.property || '',
+      city: target.city || '',
+      email: target.email || '',
+    };
+
+    let subject = selected.subject;
+    let body = selected.body_md;
+
+    // Replace Mustache-style placeholders {{key}}
+    Object.entries(data).forEach(([key, value]) => {
+      const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+      subject = subject.replace(placeholder, value);
+      body = body.replace(placeholder, value);
+    });
+
+    return { subject, body };
+  }, [selected, target]);
+
+  async function handleSend() {
+    setError(null);
+    if (!target || !selected) {
+      setError('Pick a template and make sure a targetId is provided.');
+      return;
+    }
+    // validate
+    const parsed = TemplateSchema.safeParse(selected);
     if (!parsed.success) {
-      setForm((f) => ({ ...f, error: parsed.error.errors[0].message }));
+      setError('Template schema invalid.');
       return;
     }
 
-    setForm((f) => ({ ...f, saving: true, error: undefined }));
+    setSending(true);
     try {
-      if (form.id) {
-        // update existing
-        const updated = await updateTemplate(form.id, {
-          name: form.name,
-          subject: form.subject,
-          body_md: form.body_md,
-        });
-        // depending on your route response, you may need updated.data
-        setTemplates((prev) =>
-          prev.map((t) => (t.id === updated.id ? updated : t))
-        );
-      } else {
-        // create new
-        const created = await createTemplate({
-          name: form.name,
-          subject: form.subject,
-          body_md: form.body_md,
-        });
-        setTemplates((prev) => [created, ...prev]);
+      // Use our existing email-sends API which handles both the email_sends insert and target status update
+      const sendRes = await fetch('/api/email-sends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetId: target.id,
+          templateId: selected.id,
+        }),
+      });
+      
+      if (!sendRes.ok) {
+        const j = await sendRes.json().catch(() => ({}));
+        throw new Error(j.error || 'Failed to send email.');
       }
-      handleNew();
-    } catch (err) {
-      console.error(err);
-      setForm((f) => ({ ...f, error: "Failed to save template." }));
+
+      alert('Email sent successfully! Target status updated to "emailed".');
+      router.push('/'); // back to targets
+    } catch (e: any) {
+      console.error(e);
+      setError(e.message || 'Send failed');
     } finally {
-      setForm((f) => ({ ...f, saving: false }));
+      setSending(false);
     }
   }
 
   return (
-    <main className="max-w-5xl mx-auto p-6 flex flex-col gap-8">
-      <h1 className="text-2xl font-semibold">Email Templates</h1>
+    <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
+      <h1 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '24px' }}>Templates</h1>
 
-      {/* FORM */}
-      <section className="border p-4 rounded-lg bg-white shadow-sm">
-        <h2 className="text-lg font-medium">
-          {form.id ? "Edit Template" : "New Template"}
-        </h2>
+      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        {/* Left: controls */}
+        <div style={{ 
+          border: '1px solid #e5e7eb', 
+          borderRadius: '8px', 
+          backgroundColor: 'white', 
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+          <div>
+            <h2 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '8px' }}>Select Template</h2>
+            <select
+              style={{ 
+                border: '1px solid #d1d5db', 
+                borderRadius: '4px', 
+                padding: '8px', 
+                width: '100%',
+                outline: 'none'
+              }}
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+            >
+              <option value="">— Choose a template —</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {form.error && <p className="text-red-500">{form.error}</p>}
+          <div style={{ 
+            border: '1px solid #d1d5db', 
+            borderRadius: '4px', 
+            padding: '12px', 
+            backgroundColor: '#f9fafb' 
+          }}>
+            <h3 style={{ fontWeight: '600', marginBottom: '8px' }}>Target Info</h3>
+            {!target ? (
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                {targetId ? 'Loading…' : 'Open this page via "Send Email" from Targets.'}
+              </p>
+            ) : (
+              <div style={{ fontSize: '14px', color: '#374151' }}>
+                <div style={{ marginBottom: '4px' }}><strong>Name:</strong> {target.owner_name}</div>
+                <div style={{ marginBottom: '4px' }}><strong>Email:</strong> {target.email}</div>
+                <div style={{ marginBottom: '4px' }}><strong>Company:</strong> {target.company}</div>
+                <div style={{ marginBottom: '4px' }}><strong>Property:</strong> {target.property}</div>
+                <div style={{ marginBottom: '4px' }}><strong>City:</strong> {target.city}</div>
+                <div><strong>Status:</strong> {target.status}</div>
+              </div>
+            )}
+          </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 mt-3">
-          <input
-            type="text"
-            name="name"
-            placeholder="Template Name"
-            value={form.name}
-            onChange={handleChange}
-            className="border rounded px-2 py-1"
-          />
-          <input
-            type="text"
-            name="subject"
-            placeholder="Email Subject"
-            value={form.subject}
-            onChange={handleChange}
-            className="border rounded px-2 py-1"
-          />
-          <textarea
-            name="body_md"
-            placeholder="Email Body (Markdown)"
-            value={form.body_md}
-            onChange={handleChange}
-            className="border rounded px-2 py-1 h-32 font-mono"
-          />
           <button
-            type="submit"
-            disabled={form.saving}
-            className="bg-blue-600 text-white rounded px-3 py-2"
+            disabled={!selected || !target || sending}
+            onClick={handleSend}
+            style={{
+              backgroundColor: !selected || !target || sending ? '#9ca3af' : '#16a34a',
+              color: 'white',
+              borderRadius: '4px',
+              padding: '8px 16px',
+              border: 'none',
+              cursor: !selected || !target || sending ? 'not-allowed' : 'pointer',
+              fontSize: '14px'
+            }}
           >
-            {form.saving
-              ? "Saving..."
-              : form.id
-              ? "Update Template"
-              : "Create Template"}
+            {sending ? 'Sending…' : 'Send Email'}
           </button>
-        </form>
-      </section>
 
-      {/* LIST */}
-      <section>
-        <h2 className="text-lg font-medium mb-2">Existing Templates</h2>
-        {loading ? (
-          <p>Loading...</p>
-        ) : templates.length === 0 ? (
-          <p>No templates yet.</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {templates.map((t) => (
-              <li
-                key={t.id}
-                className="border rounded-lg bg-white p-4 flex flex-col gap-2 shadow-sm"
-              >
-                <div className="flex justify-between">
-                  <div>
-                    <strong>{t.name}</strong>
-                    <div className="text-sm text-gray-600">{t.subject}</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      className="text-xs bg-gray-200 px-2 py-1 rounded"
-                      onClick={() => handleEdit(t)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-xs bg-red-600 text-white px-2 py-1 rounded"
-                      onClick={() => handleDelete(t.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+          {error && <p style={{ color: '#dc2626', fontSize: '14px' }}>{error}</p>}
+        </div>
+
+        {/* Right: preview */}
+        <div style={{ 
+          border: '1px solid #e5e7eb', 
+          borderRadius: '8px', 
+          backgroundColor: 'white', 
+          padding: '16px'
+        }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '12px' }}>Preview</h2>
+          {!selected || !target ? (
+            <p style={{ fontSize: '14px', color: '#6b7280' }}>Pick a template to preview.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '12px', textTransform: 'uppercase', color: '#6b7280', marginBottom: '4px' }}>Subject</div>
+                <div style={{ fontWeight: '500', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '4px', backgroundColor: '#f9fafb' }}>
+                  {substituted.subject}
                 </div>
-                <pre className="text-xs text-gray-700 whitespace-pre-wrap">
-                  {t.body_md}
+              </div>
+              <div>
+                <div style={{ fontSize: '12px', textTransform: 'uppercase', color: '#6b7280', marginBottom: '4px' }}>Body</div>
+                <pre style={{ 
+                  whiteSpace: 'pre-wrap', 
+                  fontSize: '14px',
+                  padding: '12px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '4px',
+                  backgroundColor: '#f9fafb',
+                  margin: 0,
+                  fontFamily: 'inherit'
+                }}>
+                  {substituted.body}
                 </pre>
-              </li>
-            ))}
-          </ul>
-        )}
+              </div>
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );

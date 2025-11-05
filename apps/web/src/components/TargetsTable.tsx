@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,19 +11,19 @@ import {
   type ColumnDef,
   type SortingState,
   type ColumnFiltersState,
-} from '@tanstack/react-table'
+} from '@tanstack/react-table';
 
-type Target = {
-  id: string
-  created_at: string
-  owner_name: string
-  company: string
-  property: string
-  city: string
-  email: string
-  source: string
-  status: 'new' | 'emailed' | 'replied' | 'called' | 'converted'
-}
+export type Target = {
+  id: string;
+  created_at: string;
+  owner_name: string;
+  company: string;
+  property: string;
+  city: string;
+  email: string;
+  source: string;
+  status: 'new' | 'emailed' | 'replied' | 'called' | 'converted';
+};
 
 const StatusBadge = ({ status }: { status: Target['status'] }) => {
   const statusStyles = {
@@ -32,7 +32,7 @@ const StatusBadge = ({ status }: { status: Target['status'] }) => {
     replied: { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
     called: { backgroundColor: '#e9d5ff', color: '#7c2d12', border: '1px solid #c4b5fd' },
     converted: { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #6ee7b7' },
-  }
+  } as const;
 
   return (
     <span
@@ -42,190 +42,185 @@ const StatusBadge = ({ status }: { status: Target['status'] }) => {
         padding: '2px 8px',
         borderRadius: '12px',
         fontSize: '12px',
-        fontWeight: '500',
-        ...statusStyles[status] || statusStyles.new
+        fontWeight: 500,
+        ...(statusStyles[status] || statusStyles.new),
       }}
     >
       {status}
     </span>
-  )
-}
+  );
+};
 
 export default function TargetsTable() {
-  const [data, setData] = useState<Target[]>([])
-  const [loading, setLoading] = useState(true)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  
-  // Fetch data
+  const [data, setData] = useState<Target[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+
   useEffect(() => {
     const fetchTargets = async () => {
       try {
-        const response = await fetch('/api/targets')
-        const result = await response.json()
-        setData(result.targets || [])
+        const response = await fetch('/api/targets');
+        const result = await response.json();
+        setData(result.targets || []);
       } catch (error) {
-        console.error('Error fetching targets:', error)
+        console.error('Error fetching targets:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchTargets()
-  }, [])
+    fetchTargets();
+  }, []);
 
-  // Define columns
+
+
   const columns = useMemo<ColumnDef<Target>[]>(
     () => [
-      {
-        accessorKey: 'owner_name',
-        header: 'Name',
-      },
-      {
-        accessorKey: 'company',
-        header: 'Company',
-      },
-      {
-        accessorKey: 'property',
-        header: 'Property',
-      },
-      {
-        accessorKey: 'city',
-        header: 'City',
-        filterFn: 'includesString',
-      },
+      { accessorKey: 'owner_name', header: 'Name' },
+      { accessorKey: 'company', header: 'Company' },
+      { accessorKey: 'property', header: 'Property' },
+      { accessorKey: 'city', header: 'City', filterFn: 'includesString' },
       {
         accessorKey: 'email',
         header: 'Email',
-        cell: ({ getValue }) => (
-          <a
-            href={`mailto:${getValue()}`}
-            style={{ color: '#2563eb', textDecoration: 'underline' }}
-          >
-            {getValue() as string}
-          </a>
-        ),
+        cell: ({ getValue }) => {
+          const v = getValue() as string;
+          return (
+            <a href={`mailto:${v}`} style={{ color: '#2563eb', textDecoration: 'underline' }}>
+              {v}
+            </a>
+          );
+        },
       },
-      {
-        accessorKey: 'source',
-        header: 'Source',
-      },
+      { accessorKey: 'source', header: 'Source' },
       {
         accessorKey: 'status',
         header: 'Status',
         cell: ({ getValue }) => <StatusBadge status={getValue() as Target['status']} />,
         filterFn: 'equals',
       },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+          const target = row.original;
+          return (
+            <button
+              onClick={() => {
+                const searchParams = new URLSearchParams({
+                  targetId: target.id,
+                  targetName: target.owner_name,
+                  targetCompany: target.company,
+                  targetProperty: target.property,
+                  targetEmail: target.email,
+                  targetCity: target.city,
+                });
+                window.location.href = `/templates?${searchParams.toString()}`;
+              }}
+              style={{
+                backgroundColor: '#2563eb',
+                color: '#fff',
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Send Email
+            </button>
+          );
+        },
+      },
     ],
     []
-  )
+  );
 
   const table = useReactTable({
     data,
     columns,
-    state: {
-      sorting,
-      columnFilters,
-    },
+    state: { sorting, columnFilters },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-  })
+  });
 
-  // Get unique cities and statuses for filters
-  const uniqueCities = useMemo(() => {
-    const cities = data.map((item) => item.city).filter(Boolean)
-    return [...new Set(cities)].sort()
-  }, [data])
-
-  const uniqueStatuses = useMemo(() => {
-    const statuses = data.map((item) => item.status)
-    return [...new Set(statuses)].sort()
-  }, [data])
+  const uniqueCities = useMemo(
+    () => [...new Set(data.map((d) => d.city).filter(Boolean))].sort(),
+    [data]
+  );
+  const uniqueStatuses = useMemo(
+    () => [...new Set(data.map((d) => d.status))].sort(),
+    [data]
+  );
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
-        <div style={{ fontSize: '18px' }}>Loading targets...</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+        <div style={{ fontSize: 18 }}>Loading targets...</div>
       </div>
-    )
+    );
   }
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Targets</h2>
-        
+    <div style={{ padding: 24 }}>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>Targets</h2>
+
         {/* Filters */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
-          {/* City Filter */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label htmlFor="city-filter" style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
+            <label htmlFor="city-filter" style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
               Filter by City
             </label>
             <select
               id="city-filter"
-              style={{ 
-                padding: '8px 12px', 
-                border: '1px solid #d1d5db', 
-                borderRadius: '4px',
-                outline: 'none'
-              }}
+              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
               value={(table.getColumn('city')?.getFilterValue() as string) ?? ''}
-              onChange={(e) =>
-                table.getColumn('city')?.setFilterValue(e.target.value || undefined)
-              }
+              onChange={(e) => table.getColumn('city')?.setFilterValue(e.target.value || undefined)}
             >
               <option value="">All Cities</option>
-              {uniqueCities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
+              {uniqueCities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Status Filter */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label htmlFor="status-filter" style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
+            <label htmlFor="status-filter" style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
               Filter by Status
             </label>
             <select
               id="status-filter"
-              style={{ 
-                padding: '8px 12px', 
-                border: '1px solid #d1d5db', 
-                borderRadius: '4px',
-                outline: 'none'
-              }}
+              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
               value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
-              onChange={(e) =>
-                table.getColumn('status')?.setFilterValue(e.target.value || undefined)
-              }
+              onChange={(e) => table.getColumn('status')?.setFilterValue(e.target.value || undefined)}
             >
               <option value="">All Statuses</option>
-              {uniqueStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
+              {uniqueStatuses.map((s) => (
+                <option key={s} value={s}>
+                  {s}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Clear Filters */}
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'end' }}>
             <button
               onClick={() => table.resetColumnFilters()}
-              style={{ 
-                padding: '8px 16px', 
-                fontSize: '14px', 
-                border: '1px solid #d1d5db', 
-                borderRadius: '4px',
+              style={{
+                padding: '8px 16px',
+                fontSize: 14,
+                border: '1px solid #d1d5db',
+                borderRadius: 4,
                 backgroundColor: 'white',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               Clear Filters
@@ -235,39 +230,32 @@ export default function TargetsTable() {
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+      <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: 8 }}>
         <table style={{ minWidth: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ backgroundColor: '#f9fafb' }}>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+            {table.getHeaderGroups().map((hg) => (
+              <tr key={hg.id}>
+                {hg.headers.map((h) => (
                   <th
-                    key={header.id}
+                    key={h.id}
                     style={{
                       padding: '12px 24px',
                       textAlign: 'left',
-                      fontSize: '12px',
-                      fontWeight: '500',
+                      fontSize: 12,
+                      fontWeight: 500,
                       color: '#6b7280',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
-                      cursor: 'pointer',
+                      cursor: h.column.getCanSort() ? 'pointer' : 'default',
                       userSelect: 'none',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #e5e7eb',
                     }}
-                    onClick={header.column.getToggleSortingHandler()}
+                    onClick={h.column.getToggleSortingHandler()}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</span>
                       <span style={{ color: '#9ca3af' }}>
-                        {{
-                          asc: '↑',
-                          desc: '↓',
-                        }[header.column.getIsSorted() as string] ?? '↕'}
+                        {{ asc: '↑', desc: '↓' }[h.column.getIsSorted() as string] ?? '↕'}
                       </span>
                     </div>
                   </th>
@@ -279,15 +267,7 @@ export default function TargetsTable() {
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 {row.getVisibleCells().map((cell) => (
-                  <td 
-                    key={cell.id} 
-                    style={{ 
-                      padding: '16px 24px', 
-                      whiteSpace: 'nowrap', 
-                      fontSize: '14px', 
-                      color: '#111827' 
-                    }}
-                  >
+                  <td key={cell.id} style={{ padding: '16px 24px', whiteSpace: 'nowrap', fontSize: 14, color: '#111827' }}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -298,103 +278,52 @@ export default function TargetsTable() {
       </div>
 
       {/* Pagination */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              cursor: table.getCanPreviousPage() ? 'pointer' : 'not-allowed',
-              opacity: table.getCanPreviousPage() ? 1 : 0.5
-            }}
-          >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} style={btn()}>
             {'<<'}
           </button>
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              cursor: table.getCanPreviousPage() ? 'pointer' : 'not-allowed',
-              opacity: table.getCanPreviousPage() ? 1 : 0.5
-            }}
-          >
+          <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} style={btn()}>
             {'<'}
           </button>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              cursor: table.getCanNextPage() ? 'pointer' : 'not-allowed',
-              opacity: table.getCanNextPage() ? 1 : 0.5
-            }}
-          >
+          <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} style={btn()}>
             {'>'}
           </button>
-          <button
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              cursor: table.getCanNextPage() ? 'pointer' : 'not-allowed',
-              opacity: table.getCanNextPage() ? 1 : 0.5
-            }}
-          >
+          <button onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()} style={btn()}>
             {'>>'}
           </button>
         </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '14px' }}>
-            Page{' '}
-            <strong>
-              {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-            </strong>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 14 }}>
+            Page <strong>{table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</strong>
           </span>
           <select
             value={table.getState().pagination.pageSize}
-            onChange={(e) => {
-              table.setPageSize(Number(e.target.value))
-            }}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
-              borderRadius: '4px',
-              outline: 'none'
-            }}
+            onChange={(e) => table.setPageSize(Number(e.target.value))}
+            style={{ padding: '4px 12px', fontSize: 14, border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
           >
-            {[10, 20, 30, 40, 50].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
+            {[10, 20, 30, 40, 50].map((n) => (
+              <option key={n} value={n}>Show {n}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Results summary */}
-      <div style={{ marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
+      <div style={{ marginTop: 16, fontSize: 14, color: '#6b7280' }}>
         Showing {table.getRowModel().rows.length} of {data.length} targets
       </div>
     </div>
-  )
+  );
+}
+
+function btn() {
+  return {
+    padding: '4px 12px',
+    fontSize: 14,
+    border: '1px solid #d1d5db',
+    borderRadius: 4,
+    backgroundColor: 'white',
+    cursor: 'pointer',
+  } as React.CSSProperties;
 }
