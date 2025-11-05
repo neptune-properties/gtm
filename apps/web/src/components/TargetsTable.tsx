@@ -13,6 +13,13 @@ import {
   type ColumnFiltersState,
 } from '@tanstack/react-table'
 
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 type Target = {
   id: string
   created_at: string
@@ -72,6 +79,22 @@ export default function TargetsTable() {
     }
 
     fetchTargets()
+
+        const channel = supabase
+      .channel('targets-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'targets' },
+        (payload) => {
+          console.log('Supabase change:', payload)
+          fetchTargets() // refresh table data
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   // Define columns
