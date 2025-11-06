@@ -10,7 +10,7 @@ const KanbanContainer = styled.div`
 const KanbanColumn = styled.div`
   background-color: #f9fafb;
   padding: 1rem;
-  border-radius: 0.375rem;
+  border-radius: 0.x375rem;
   width: 30%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `
@@ -63,7 +63,7 @@ export default function Kanban() {
   const statuses = [
     { name: "new", label: "New" },
     { name: "qualified", label: "Qualified" },
-    { name: "contacted", label: "Contacted" },
+    { name: "contacted", label: "Contacted (Emailed, Called, Replied)" },
   ]
 
   // Filter leads based on their status
