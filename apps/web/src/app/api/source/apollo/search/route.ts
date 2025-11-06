@@ -24,6 +24,7 @@ const MOCK_DATA = [
   { owner_name: "Bob Martinez", company: "Innova Labs", city: "Austin", email: "bob@innovalabs.com", property: "", source: "mock" },
   { owner_name: "Carla Singh", company: "TechNova", city: "San Francisco", email: "carla@technova.com", property: "", source: "mock" },
   { owner_name: "Emily Wang", company: "Stripe", city: "New York", email: "ewanger@example.com", property: "", source: "mock" },
+  
 ];
 
 export async function POST(req: Request) {

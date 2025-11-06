@@ -1,78 +1,95 @@
 "use client";
-
 import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 
 export default function ApolloSearchModal({
   open,
   onClose,
+  onAdded,
 }: {
   open: boolean;
   onClose: (open: boolean) => void;
+  onAdded?: () => void;
 }) {
   const supabase = supabaseBrowser();
   const [filters, setFilters] = useState({ company: "", city: "" });
   const [results, setResults] = useState<any[]>([]);
-  const [mode, setMode] = useState<"mock" | "live" | undefined>();
   const [loading, setLoading] = useState(false);
-
+  const [errorMsg, setErrorMsg] = useState<string | null>(null); // NEW
+ 
   const handleSearch = async () => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const res = await fetch("/api/source/apollo/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(filters),
       });
-      const data = await res.json();
+  
+      // Parse body once
+      let payload: any = null;
+      try {
+        payload = await res.json();
+      } catch { payload = null; }
+  
       if (!res.ok) {
-        console.error("Apollo search failed", data);
-        alert(data?.error ?? "Apollo search failed");
+        const msg = (payload && (payload.error || payload.message)) || `Request failed (${res.status})`;
         setResults([]);
-      } else {
-        setResults(data.results || []);
-        setMode(data.mode);
+        setErrorMsg(msg);
+        return;
       }
+  
+      setResults(Array.isArray(payload?.results) ? payload.results : []);
+    } catch (err: any) {
+      console.error(err);
+      setResults([]);
+      setErrorMsg(err?.message || "Search failed");
     } finally {
       setLoading(false);
     }
   };
+  
 
   const addToTargets = async (person: any) => {
-    // client-side duplicate check (email)
-    if (!person.email) {
-      alert("No email found for this person; cannot add (dedupe by email).");
-      return;
-    }
-
-    const { data: existing, error: selErr } = await supabase
-      .from("targets")
-      .select("email")
-      .eq("email", person.email)
-      .maybeSingle();
-
-    if (selErr) {
-      console.error(selErr);
-      alert("Error checking duplicates");
-      return;
-    }
-    if (existing) {
-      alert("Already exists");
-      return;
-    }
-
-    // Insert (or use upsert if you create a unique index on email)
-    const { error } = await supabase
-      .from("targets")
-      .insert(person); // or .upsert(person, { onConflict: "email", ignoreDuplicates: true })
-
-    if (error) {
-      console.error(error);
-      alert("Error adding target");
-    } else {
-      alert(`${person.owner_name || "Target"} added successfully`);
+    try {
+      // Insert via server API so we bypass RLS and guarantee consistency
+      const res = await fetch("/api/targets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...person,
+          status: person.status ?? "new",
+          source: person.source ?? "apollo",
+        }),
+      });
+  
+      const payload = await res.json();
+      if (!res.ok) {
+        console.error(payload);
+        alert(payload?.error || `Insert failed (${res.status})`);
+        return;
+      }
+  
+      if (payload?.duplicated) {
+        alert("Already exists");
+        return;
+      }
+  
+      // Success: tell the table to refresh and close modal
+      alert(`${person.owner_name} added successfully`);
+  
+      // Fire a browser event that the table listens for
+      window.dispatchEvent(new CustomEvent("targets:changed"));
+  
+      onAdded?.();      // in case you also bump refreshKey
+      onClose(false);   // optional: close modal to see the table
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message || "Unexpected error adding target");
     }
   };
+  
 
   if (!open) return null;
 
@@ -86,15 +103,9 @@ export default function ApolloSearchModal({
           ✕
         </button>
 
-        <h2 className="text-xl font-semibold mb-2">Search Apollo</h2>
-        {mode && (
-          <p className="text-xs mb-2 text-gray-500">
-            Mode: <span className="font-medium">{mode}</span>
-          </p>
-        )}
+        <h2 className="text-xl font-semibold mb-4">Search Apollo</h2>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row gap-2 mb-3">
           <input
             type="text"
             placeholder="Company"
@@ -104,7 +115,7 @@ export default function ApolloSearchModal({
           />
           <input
             type="text"
-            placeholder="City (e.g., Austin, TX)"
+            placeholder="City"
             value={filters.city}
             onChange={(e) => setFilters({ ...filters, city: e.target.value })}
             className="border border-gray-300 rounded px-2 py-1 flex-1"
@@ -114,26 +125,32 @@ export default function ApolloSearchModal({
             disabled={loading}
             className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? "..." : "Search"}
+            {loading ? "Searching..." : "Search"}
           </button>
         </div>
 
-        {/* Results */}
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {results.length === 0 && !loading && (
-            <p className="text-gray-500 text-sm">No results yet.</p>
+        {/* Optional error line */}
+        {errorMsg && (
+          <p className="text-red-600 text-sm mb-2">{errorMsg}</p>
+        )}
+
+        <div className="space-y-2 max-h-64 overflow-y-auto border-t pt-3">
+          {results.length === 0 && !loading && !errorMsg && (
+            <p className="text-gray-500 text-sm">
+              No results yet. Enter filters and click Search.
+            </p>
           )}
           {results.map((r, i) => (
             <div
-              key={`${r.email || r.owner_name || i}-${i}`}
-              className="flex justify-between items-center border border-gray-200 p-2 rounded"
+              key={i}
+              className="flex justify-between items-center border p-2 rounded"
             >
               <div>
-                <p className="font-medium">{r.owner_name || "Unknown"}</p>
+                <p className="font-medium">{r.owner_name}</p>
                 <p className="text-sm text-gray-600">
-                  {r.company || "—"} {r.city ? `— ${r.city}` : ""}
+                  {r.company} — {r.city}
                 </p>
-                <p className="text-xs text-gray-500">{r.email || "No email"}</p>
+                <p className="text-xs text-gray-500">{r.email}</p>
               </div>
               <button
                 onClick={() => addToTargets(r)}
