@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
@@ -11,7 +11,7 @@ import {
   type ColumnDef,
   type SortingState,
   type ColumnFiltersState,
-} from '@tanstack/react-table'
+} from '@tanstack/react-table';
 
 /** --- Status badge --- */
 const StatusBadge = ({ status }: { status: string | null | undefined }) => {
@@ -22,7 +22,7 @@ const StatusBadge = ({ status }: { status: string | null | undefined }) => {
     replied: { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
     called: { backgroundColor: '#e9d5ff', color: '#7c2d12', border: '1px solid #c4b5fd' },
     converted: { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #6ee7b7' },
-  }
+  } as const;
 
   return (
     <span
@@ -38,8 +38,8 @@ const StatusBadge = ({ status }: { status: string | null | undefined }) => {
     >
       {s}
     </span>
-  )
-}
+  );
+};
 
 type Target = {
   id: string
@@ -109,9 +109,41 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
         cell: ({ getValue }) => <StatusBadge status={getValue() as string} />,
         filterFn: 'equals',
       },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+          const target = row.original;
+          return (
+            <button
+              onClick={() => {
+                const searchParams = new URLSearchParams({
+                  targetId: target.id,
+                  targetName: target.owner_name,
+                  targetCompany: target.company,
+                  targetProperty: target.property,
+                  targetEmail: target.email,
+                  targetCity: target.city,
+                });
+                window.location.href = `/templates?${searchParams.toString()}`;
+              }}
+              style={{
+                backgroundColor: '#2563eb',
+                color: '#fff',
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Send Email
+            </button>
+          );
+        },
+      },
     ],
     []
-  )
+  );
 
   const table = useReactTable({
     data,
@@ -123,7 +155,7 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-  })
+  });
 
   const uniqueCities = useMemo(
     () => [...new Set(data.map((d) => d.city).filter(Boolean))].sort(),
@@ -139,7 +171,7 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
         <div style={{ fontSize: 18 }}>Loading targets...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -154,9 +186,7 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
             <select
               style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4 }}
               value={(table.getColumn('city')?.getFilterValue() as string) ?? ''}
-              onChange={(e) =>
-                table.getColumn('city')?.setFilterValue(e.target.value || undefined)
-              }
+              onChange={(e) => table.getColumn('city')?.setFilterValue(e.target.value || undefined)}
             >
               <option value="">All Cities</option>
               {uniqueCities.map((c) => (
@@ -172,9 +202,7 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
             <select
               style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4 }}
               value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
-              onChange={(e) =>
-                table.getColumn('status')?.setFilterValue(e.target.value || undefined)
-              }
+              onChange={(e) => table.getColumn('status')?.setFilterValue(e.target.value || undefined)}
             >
               <option value="">All Statuses</option>
               {uniqueStatuses.map((s) => (

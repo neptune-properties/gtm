@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server"
-import { createUserSupabaseClient } from "@/lib/supabaseClient"
+import { createUserSupabaseClient, supabaseServer } from "@/lib/supabaseClient"
 
 
 // Handles GET requests to /api/templates
 export async function GET(req: Request) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) {
-    return NextResponse.json({ error: "Missing auth token" }, { status: 401 });
+  
+  let supabase;
+  if (token) {
+    // If token provided, use authenticated client
+    supabase = createUserSupabaseClient(token);
+  } else {
+    // If no token, use server client (bypasses RLS for reading templates)
+    supabase = supabaseServer();
   }
-
-  const supabase = createUserSupabaseClient(token);
 
   const { data, error } = await supabase
     .from("email_templates")
-    .select("*");
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
+    console.error("Error fetching templates:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
