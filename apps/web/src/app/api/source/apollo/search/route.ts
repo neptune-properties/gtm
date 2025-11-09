@@ -94,8 +94,9 @@ export async function POST(req: Request) {
 
     const json = await res.json();
     const people = Array.isArray(json?.people) ? json.people : [];
-    const mapped = people.map(mapApolloPerson);
+    const mapped: ReturnType<typeof mapApolloPerson>[] = people.map(mapApolloPerson);
 
+  
     // In real search, email may be missing; keep entries with email so dedupe works.
     const results = mapped.filter((p) => p.email);
 
