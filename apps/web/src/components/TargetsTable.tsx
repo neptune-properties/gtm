@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,20 +13,10 @@ import {
   type ColumnFiltersState,
 } from '@tanstack/react-table';
 
-export type Target = {
-  id: string;
-  created_at: string;
-  owner_name: string;
-  company: string;
-  property: string;
-  city: string;
-  email: string;
-  source: string;
-  status: 'new' | 'emailed' | 'replied' | 'called' | 'converted';
-};
-
-const StatusBadge = ({ status }: { status: Target['status'] }) => {
-  const statusStyles = {
+/** --- Status badge --- */
+const StatusBadge = ({ status }: { status: string | null | undefined }) => {
+  const s = (status || 'new') as 'new' | 'emailed' | 'replied' | 'called' | 'converted'
+  const colors = {
     new: { backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' },
     emailed: { backgroundColor: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' },
     replied: { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
@@ -43,38 +33,53 @@ const StatusBadge = ({ status }: { status: Target['status'] }) => {
         borderRadius: '12px',
         fontSize: '12px',
         fontWeight: 500,
-        ...(statusStyles[status] || statusStyles.new),
+        ...(colors[s] || colors.new),
       }}
     >
-      {status}
+      {s}
     </span>
   );
 };
 
-export default function TargetsTable() {
-  const [data, setData] = useState<Target[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+type Target = {
+  id: string
+  created_at: string
+  owner_name: string
+  company: string
+  property: string
+  city: string
+  email: string
+  source: string
+  status: string | null
+}
 
+export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }) {
+  const [data, setData] = useState<Target[]>([])
+  const [loading, setLoading] = useState(true)
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+
+  /** fetch from API */
+  const fetchTargets = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/targets?ts=${Date.now()}`, { cache: 'no-store' })
+      const json = await res.json()
+      const rows: Target[] = (json.targets || []).map((t: any) => ({
+        ...t,
+        status: t.status ?? 'new',
+      }))
+      setData(rows)
+    } catch (err) {
+      console.error('Error fetching targets:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    const fetchTargets = async () => {
-      try {
-        const response = await fetch('/api/targets');
-        const result = await response.json();
-        setData(result.targets || []);
-      } catch (error) {
-        console.error('Error fetching targets:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTargets();
-  }, []);
-
-
+    fetchTargets()
+  }, [fetchTargets, refreshKey])
 
   const columns = useMemo<ColumnDef<Target>[]>(
     () => [
@@ -86,19 +91,22 @@ export default function TargetsTable() {
         accessorKey: 'email',
         header: 'Email',
         cell: ({ getValue }) => {
-          const v = getValue() as string;
+          const v = getValue() as string
           return (
-            <a href={`mailto:${v}`} style={{ color: '#2563eb', textDecoration: 'underline' }}>
+            <a
+              href={`mailto:${v}`}
+              style={{ color: '#2563eb', textDecoration: 'underline' }}
+            >
               {v}
             </a>
-          );
+          )
         },
       },
       { accessorKey: 'source', header: 'Source' },
       {
         accessorKey: 'status',
         header: 'Status',
-        cell: ({ getValue }) => <StatusBadge status={getValue() as Target['status']} />,
+        cell: ({ getValue }) => <StatusBadge status={getValue() as string} />,
         filterFn: 'equals',
       },
       {
@@ -152,11 +160,11 @@ export default function TargetsTable() {
   const uniqueCities = useMemo(
     () => [...new Set(data.map((d) => d.city).filter(Boolean))].sort(),
     [data]
-  );
+  )
   const uniqueStatuses = useMemo(
-    () => [...new Set(data.map((d) => d.status))].sort(),
+    () => [...new Set(data.map((d) => d.status ?? 'new'))].sort(),
     [data]
-  );
+  )
 
   if (loading) {
     return (
@@ -174,12 +182,9 @@ export default function TargetsTable() {
         {/* Filters */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label htmlFor="city-filter" style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
-              Filter by City
-            </label>
+            <label style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Filter by City</label>
             <select
-              id="city-filter"
-              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
+              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4 }}
               value={(table.getColumn('city')?.getFilterValue() as string) ?? ''}
               onChange={(e) => table.getColumn('city')?.setFilterValue(e.target.value || undefined)}
             >
@@ -193,12 +198,9 @@ export default function TargetsTable() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label htmlFor="status-filter" style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
-              Filter by Status
-            </label>
+            <label style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Filter by Status</label>
             <select
-              id="status-filter"
-              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
+              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4 }}
               value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
               onChange={(e) => table.getColumn('status')?.setFilterValue(e.target.value || undefined)}
             >
@@ -238,6 +240,7 @@ export default function TargetsTable() {
                 {hg.headers.map((h) => (
                   <th
                     key={h.id}
+                    onClick={h.column.getToggleSortingHandler()}
                     style={{
                       padding: '12px 24px',
                       textAlign: 'left',
@@ -246,14 +249,16 @@ export default function TargetsTable() {
                       color: '#6b7280',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
-                      cursor: h.column.getCanSort() ? 'pointer' : 'default',
-                      userSelect: 'none',
+                      cursor: 'pointer',
                       borderBottom: '1px solid #e5e7eb',
                     }}
-                    onClick={h.column.getToggleSortingHandler()}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</span>
+                      <span>
+                        {h.isPlaceholder
+                          ? null
+                          : flexRender(h.column.columnDef.header, h.getContext())}
+                      </span>
                       <span style={{ color: '#9ca3af' }}>
                         {{ asc: '↑', desc: '↓' }[h.column.getIsSorted() as string] ?? '↕'}
                       </span>
@@ -267,7 +272,10 @@ export default function TargetsTable() {
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} style={{ padding: '16px 24px', whiteSpace: 'nowrap', fontSize: 14, color: '#111827' }}>
+                  <td
+                    key={cell.id}
+                    style={{ padding: '16px 24px', whiteSpace: 'nowrap', fontSize: 14, color: '#111827' }}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -280,31 +288,54 @@ export default function TargetsTable() {
       {/* Pagination */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} style={btn()}>
-            {'<<'}
-          </button>
-          <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} style={btn()}>
-            {'<'}
-          </button>
-          <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} style={btn()}>
-            {'>'}
-          </button>
-          <button onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()} style={btn()}>
-            {'>>'}
-          </button>
+          {['<<', '<', '>', '>>'].map((symbol, i) => {
+            const actions = [
+              () => table.setPageIndex(0),
+              () => table.previousPage(),
+              () => table.nextPage(),
+              () => table.setPageIndex(table.getPageCount() - 1),
+            ]
+            const disabled = i < 2 ? !table.getCanPreviousPage() : !table.getCanNextPage()
+            return (
+              <button
+                key={symbol}
+                onClick={actions[i]}
+                disabled={disabled}
+                style={{
+                  padding: '4px 12px',
+                  fontSize: 14,
+                  border: '1px solid #d1d5db',
+                  borderRadius: 4,
+                  backgroundColor: 'white',
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                  opacity: disabled ? 0.5 : 1,
+                }}
+              >
+                {symbol}
+              </button>
+            )
+          })}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 14 }}>
-            Page <strong>{table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</strong>
+            Page <strong>{table.getState().pagination.pageIndex + 1}</strong> of{' '}
+            {table.getPageCount()}
           </span>
           <select
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
-            style={{ padding: '4px 12px', fontSize: 14, border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
+            style={{
+              padding: '4px 12px',
+              fontSize: 14,
+              border: '1px solid #d1d5db',
+              borderRadius: 4,
+            }}
           >
             {[10, 20, 30, 40, 50].map((n) => (
-              <option key={n} value={n}>Show {n}</option>
+              <option key={n} value={n}>
+                Show {n}
+              </option>
             ))}
           </select>
         </div>
@@ -314,16 +345,5 @@ export default function TargetsTable() {
         Showing {table.getRowModel().rows.length} of {data.length} targets
       </div>
     </div>
-  );
-}
-
-function btn() {
-  return {
-    padding: '4px 12px',
-    fontSize: 14,
-    border: '1px solid #d1d5db',
-    borderRadius: 4,
-    backgroundColor: 'white',
-    cursor: 'pointer',
-  } as React.CSSProperties;
+  )
 }
