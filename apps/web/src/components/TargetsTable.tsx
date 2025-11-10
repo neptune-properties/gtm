@@ -25,29 +25,69 @@ type Target = {
   status: 'new' | 'emailed' | 'replied' | 'called' | 'converted'
 }
 
-const StatusBadge = ({ status }: { status: Target['status'] }) => {
+const StatusDropdown = ({ 
+  status, 
+  targetId, 
+  onStatusChange 
+}: { 
+  status: Target['status']
+  targetId: string
+  onStatusChange: (targetId: string, newStatus: Target['status']) => void
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
   const statusStyles = {
-    new: { backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' },
-    emailed: { backgroundColor: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' },
-    replied: { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
-    called: { backgroundColor: '#e9d5ff', color: '#7c2d12', border: '1px solid #c4b5fd' },
-    converted: { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #6ee7b7' },
+    new: { backgroundColor: '#f3f4f6', color: '#374151' },
+    emailed: { backgroundColor: '#dbeafe', color: '#1e40af' },
+    replied: { backgroundColor: '#fef3c7', color: '#92400e' },
+    called: { backgroundColor: '#e9d5ff', color: '#7c2d12' },
+    converted: { backgroundColor: '#d1fae5', color: '#065f46' },
   }
 
+  const statusOptions: Target['status'][] = ['new', 'emailed', 'replied', 'called', 'converted']
+
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 8px',
-        borderRadius: '12px',
-        fontSize: '12px',
-        fontWeight: '500',
-        ...statusStyles[status] || statusStyles.new
-      }}
-    >
-      {status}
-    </span>
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        onClick={() => {
+          console.log('CLICKED!')
+          setIsOpen(!isOpen)
+        }}
+        style={{
+          padding: '4px 12px',
+          borderRadius: '6px',
+          border: '1px solid #d1d5db',
+          cursor: 'pointer',
+          ...statusStyles[status]
+        }}
+      >
+        {status} ▼
+      </button>
+
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          background: 'white',
+          border: '1px solid #ccc',
+          zIndex: 1000
+        }}>
+          {statusOptions.map(option => (
+            <div 
+              key={option}
+              onClick={() => {
+                onStatusChange(targetId, option)
+                setIsOpen(false)
+              }}
+              style={{ padding: '8px', cursor: 'pointer' }}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -56,13 +96,14 @@ export default function TargetsTable() {
   const [loading, setLoading] = useState(true)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  
+
   // Fetch data
   useEffect(() => {
     const fetchTargets = async () => {
       try {
         const response = await fetch('/api/targets')
         const result = await response.json()
+        console.log('Fetched targets:', result) // Debug log
         setData(result.targets || [])
       } catch (error) {
         console.error('Error fetching targets:', error)
@@ -73,6 +114,38 @@ export default function TargetsTable() {
 
     fetchTargets()
   }, [])
+
+  // Update status in backend
+  const updateStatus = async (targetId: string, newStatus: Target['status']) => {
+    try {
+      const response = await fetch('/api/targets/status', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetId,
+          status: newStatus,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update status')
+      }
+
+      // Update local state
+      setData(prevData =>
+        prevData.map(target =>
+          target.id === targetId ? { ...target, status: newStatus } : target
+        )
+      )
+
+      console.log(`Status updated for target ${targetId} to ${newStatus}`)
+    } catch (error) {
+      console.error('Error updating status:', error)
+      // You might want to show an error message to the user here
+    }
+  }
 
   // Define columns
   const columns = useMemo<ColumnDef<Target>[]>(
@@ -99,7 +172,7 @@ export default function TargetsTable() {
         header: 'Email',
         cell: ({ getValue }) => (
           <a
-            href={`mailto:${getValue()}`}
+            href={`mailto:${getValue() as string}`}
             style={{ color: '#2563eb', textDecoration: 'underline' }}
           >
             {getValue() as string}
@@ -113,7 +186,13 @@ export default function TargetsTable() {
       {
         accessorKey: 'status',
         header: 'Status',
-        cell: ({ getValue }) => <StatusBadge status={getValue() as Target['status']} />,
+        cell: ({ row }) => (
+          <StatusDropdown 
+            status={row.original.status} 
+            targetId={row.original.id}
+            onStatusChange={updateStatus}
+          />
+        ),
         filterFn: 'equals',
       },
     ],
