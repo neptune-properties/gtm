@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,30 +11,31 @@ import {
   type ColumnDef,
   type SortingState,
   type ColumnFiltersState,
-} from '@tanstack/react-table'
+} from '@tanstack/react-table';
+import { supabaseBrowser } from "@/lib/supabaseClient";  // Import Supabase client for the browser
 
 type Target = {
-  id: string
-  created_at: string
-  owner_name: string
-  company: string
-  property: string
-  city: string
-  email: string
-  source: string
-  status: 'new' | 'emailed' | 'replied' | 'called' | 'converted'
-}
+  id: string;
+  created_at: string;
+  owner_name: string;
+  company: string;
+  property: string;
+  city: string;
+  email: string;
+  source: string;
+  status: 'new' | 'emailed' | 'replied' | 'called' | 'converted';
+};
 
-const StatusDropdown = ({ 
-  status, 
-  targetId, 
-  onStatusChange 
-}: { 
-  status: Target['status']
-  targetId: string
-  onStatusChange: (targetId: string, newStatus: Target['status']) => void
+const StatusDropdown = ({
+  status,
+  targetId,
+  onStatusChange
+}: {
+  status: Target['status'];
+  targetId: string;
+  onStatusChange: (targetId: string, newStatus: Target['status']) => void;
 }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   const statusStyles = {
     new: { backgroundColor: '#f3f4f6', color: '#374151' },
@@ -42,43 +43,44 @@ const StatusDropdown = ({
     replied: { backgroundColor: '#fef3c7', color: '#92400e' },
     called: { backgroundColor: '#e9d5ff', color: '#7c2d12' },
     converted: { backgroundColor: '#d1fae5', color: '#065f46' },
-  }
+  };
 
-  const statusOptions: Target['status'][] = ['new', 'emailed', 'replied', 'called', 'converted']
+  const statusOptions: Target['status'][] = ['new', 'emailed', 'replied', 'called', 'converted'];
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <button
         onClick={() => {
-          console.log('CLICKED!')
-          setIsOpen(!isOpen)
+          setIsOpen(!isOpen);
         }}
         style={{
           padding: '4px 12px',
           borderRadius: '6px',
           border: '1px solid #d1d5db',
           cursor: 'pointer',
-          ...statusStyles[status]
+          ...statusStyles[status],
         }}
       >
         {status} ▼
       </button>
 
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          background: 'white',
-          border: '1px solid #ccc',
-          zIndex: 1000
-        }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            background: 'white',
+            border: '1px solid #ccc',
+            zIndex: 1000,
+          }}
+        >
           {statusOptions.map(option => (
-            <div 
+            <div
               key={option}
               onClick={() => {
-                onStatusChange(targetId, option)
-                setIsOpen(false)
+                onStatusChange(targetId, option);
+                setIsOpen(false);
               }}
               style={{ padding: '8px', cursor: 'pointer' }}
             >
@@ -88,32 +90,33 @@ const StatusDropdown = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 export default function TargetsTable() {
-  const [data, setData] = useState<Target[]>([])
-  const [loading, setLoading] = useState(true)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [data, setData] = useState<Target[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());  // Track selected targets
 
   // Fetch data
   useEffect(() => {
     const fetchTargets = async () => {
       try {
-        const response = await fetch('/api/targets')
-        const result = await response.json()
-        console.log('Fetched targets:', result) // Debug log
-        setData(result.targets || [])
+        const response = await fetch('/api/targets');
+        const result = await response.json();
+        console.log('Fetched targets:', result); // Debug log
+        setData(result.targets || []);
       } catch (error) {
-        console.error('Error fetching targets:', error)
+        console.error('Error fetching targets:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchTargets()
-  }, [])
+    fetchTargets();
+  }, []);
 
   // Update status in backend
   const updateStatus = async (targetId: string, newStatus: Target['status']) => {
@@ -127,10 +130,10 @@ export default function TargetsTable() {
           targetId,
           status: newStatus,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update status')
+        throw new Error('Failed to update status');
       }
 
       // Update local state
@@ -138,18 +141,69 @@ export default function TargetsTable() {
         prevData.map(target =>
           target.id === targetId ? { ...target, status: newStatus } : target
         )
-      )
+      );
 
-      console.log(`Status updated for target ${targetId} to ${newStatus}`)
+      console.log(`Status updated for target ${targetId} to ${newStatus}`);
     } catch (error) {
-      console.error('Error updating status:', error)
-      // You might want to show an error message to the user here
+      console.error('Error updating status:', error);
     }
-  }
+  };
+
+  // Export selected targets data to CSV
+  const exportCSV = () => {
+    const selectedData = data.filter(target => selectedTargets.has(target.id));
+
+    const headers = ['Name', 'Company', 'Property', 'City', 'Email', 'Source'];
+    const rows = selectedData.map((target) => [
+      target.owner_name,
+      target.company,
+      target.property,
+      target.city,
+      target.email,
+      target.source,
+    ]);
+
+    const csvContent = [
+      headers.join(','), // headers row
+      ...rows.map(row => row.join(',')), // data rows
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'targets.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Toggle target selection
+  const toggleSelection = (id: string) => {
+    setSelectedTargets((prevSelectedTargets) => {
+      const newSelectedTargets = new Set(prevSelectedTargets);
+      if (newSelectedTargets.has(id)) {
+        newSelectedTargets.delete(id);
+      } else {
+        newSelectedTargets.add(id);
+      }
+      return newSelectedTargets;
+    });
+  };
 
   // Define columns
   const columns = useMemo<ColumnDef<Target>[]>(
     () => [
+      {
+        accessorKey: 'select', // Add column for selection
+        header: 'Select',
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={selectedTargets.has(row.original.id)}
+            onChange={() => toggleSelection(row.original.id)}
+          />
+        ),
+      },
       {
         accessorKey: 'owner_name',
         header: 'Name',
@@ -196,8 +250,8 @@ export default function TargetsTable() {
         filterFn: 'equals',
       },
     ],
-    []
-  )
+    [selectedTargets]
+  );
 
   const table = useReactTable({
     data,
@@ -212,32 +266,48 @@ export default function TargetsTable() {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-  })
+  });
 
   // Get unique cities and statuses for filters
   const uniqueCities = useMemo(() => {
-    const cities = data.map((item) => item.city).filter(Boolean)
-    return [...new Set(cities)].sort()
-  }, [data])
+    const cities = data.map((item) => item.city).filter(Boolean);
+    return [...new Set(cities)].sort();
+  }, [data]);
 
   const uniqueStatuses = useMemo(() => {
-    const statuses = data.map((item) => item.status)
-    return [...new Set(statuses)].sort()
-  }, [data])
+    const statuses = data.map((item) => item.status);
+    return [...new Set(statuses)].sort();
+  }, [data]);
 
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
         <div style={{ fontSize: '18px' }}>Loading targets...</div>
       </div>
-    )
+    );
   }
 
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Targets</h2>
-        
+
+        {/* Export CSV Button */}
+        <button
+          onClick={exportCSV}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '4px',
+            border: '1px solid #d1d5db',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            cursor: 'pointer',
+            marginBottom: '16px',
+          }}
+        >
+          Export CSV
+        </button>
+
         {/* Filters */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
           {/* City Filter */}
@@ -298,13 +368,13 @@ export default function TargetsTable() {
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'end' }}>
             <button
               onClick={() => table.resetColumnFilters()}
-              style={{ 
-                padding: '8px 16px', 
-                fontSize: '14px', 
-                border: '1px solid #d1d5db', 
+              style={{
+                padding: '8px 16px',
+                fontSize: '14px',
+                border: '1px solid #d1d5db',
                 borderRadius: '4px',
                 backgroundColor: 'white',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               Clear Filters
@@ -332,7 +402,7 @@ export default function TargetsTable() {
                       letterSpacing: '0.05em',
                       cursor: 'pointer',
                       userSelect: 'none',
-                      borderBottom: '1px solid #e5e7eb'
+                      borderBottom: '1px solid #e5e7eb',
                     }}
                     onClick={header.column.getToggleSortingHandler()}
                   >
@@ -358,13 +428,13 @@ export default function TargetsTable() {
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 {row.getVisibleCells().map((cell) => (
-                  <td 
-                    key={cell.id} 
-                    style={{ 
-                      padding: '16px 24px', 
-                      whiteSpace: 'nowrap', 
-                      fontSize: '14px', 
-                      color: '#111827' 
+                  <td
+                    key={cell.id}
+                    style={{
+                      padding: '16px 24px',
+                      whiteSpace: 'nowrap',
+                      fontSize: '14px',
+                      color: '#111827',
                     }}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -376,20 +446,28 @@ export default function TargetsTable() {
         </table>
       </div>
 
+
       {/* Pagination */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: '16px',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
               borderRadius: '4px',
               backgroundColor: 'white',
               cursor: table.getCanPreviousPage() ? 'pointer' : 'not-allowed',
-              opacity: table.getCanPreviousPage() ? 1 : 0.5
+              opacity: table.getCanPreviousPage() ? 1 : 0.5,
             }}
           >
             {'<<'}
@@ -397,14 +475,14 @@ export default function TargetsTable() {
           <button
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
               borderRadius: '4px',
               backgroundColor: 'white',
               cursor: table.getCanPreviousPage() ? 'pointer' : 'not-allowed',
-              opacity: table.getCanPreviousPage() ? 1 : 0.5
+              opacity: table.getCanPreviousPage() ? 1 : 0.5,
             }}
           >
             {'<'}
@@ -412,14 +490,14 @@ export default function TargetsTable() {
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
               borderRadius: '4px',
               backgroundColor: 'white',
               cursor: table.getCanNextPage() ? 'pointer' : 'not-allowed',
-              opacity: table.getCanNextPage() ? 1 : 0.5
+              opacity: table.getCanNextPage() ? 1 : 0.5,
             }}
           >
             {'>'}
@@ -427,20 +505,20 @@ export default function TargetsTable() {
           <button
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
               borderRadius: '4px',
               backgroundColor: 'white',
               cursor: table.getCanNextPage() ? 'pointer' : 'not-allowed',
-              opacity: table.getCanNextPage() ? 1 : 0.5
+              opacity: table.getCanNextPage() ? 1 : 0.5,
             }}
           >
             {'>>'}
           </button>
         </div>
-        
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '14px' }}>
             Page{' '}
@@ -453,12 +531,12 @@ export default function TargetsTable() {
             onChange={(e) => {
               table.setPageSize(Number(e.target.value))
             }}
-            style={{ 
-              padding: '4px 12px', 
-              fontSize: '14px', 
-              border: '1px solid #d1d5db', 
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
               borderRadius: '4px',
-              outline: 'none'
+              outline: 'none',
             }}
           >
             {[10, 20, 30, 40, 50].map((pageSize) => (
