@@ -16,15 +16,12 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setMsg("");
-    const supabase = supabaseBrowser();
+    const supabase = supabaseBrowser(rememberMe);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
-        options: {
-          persistSession: rememberMe
-        }
       });
       
       if (error) throw error;

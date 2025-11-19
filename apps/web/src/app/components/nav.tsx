@@ -9,7 +9,7 @@ export default function Nav() {
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = supabaseBrowser();
+    const supabase = supabaseBrowser(false);
 
     // Get current user
     supabase.auth.getUser().then(({ data }) => {
@@ -25,7 +25,7 @@ export default function Nav() {
   }, []);
 
   const signOut = async () => {
-    await supabaseBrowser().auth.signOut();
+    await supabaseBrowser(false).auth.signOut();
     router.push("/auth");
   };
 

@@ -1,10 +1,14 @@
 import { createClient } from "@supabase/supabase-js"
 
 // Factory for browser-side client
-export const supabaseBrowser = () => {
+export const supabaseBrowser = (rememberMe: boolean) => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  return createClient(url, anon)
+  return createClient(url, anon, {
+    auth: {
+      persistSession: rememberMe
+    }
+  })
 }
 
 export function createUserSupabaseClient(token: string) {
