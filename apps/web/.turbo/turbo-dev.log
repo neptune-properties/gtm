@@ -10,6 +10,8 @@
     · typedRoutes
 
  [32m[1m✓[22m[39m Starting...
+ [32m[1m✓[22m[39m Ready in 1002ms
+[?25h
 SyntaxError: Expected ',' or '}' after property value in JSON at position 518 (line 21 column 9)
     at JSON.parse (<anonymous>)
     at patchIncorrectLockfile (/home/jialigood/neptune/gtm/node_modules/[4m.pnpm[24m/next@14.2.15_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/[4mnext[24m/dist/lib/patch-incorrect-lockfile.js:94:33)

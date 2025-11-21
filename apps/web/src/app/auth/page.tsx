@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseClient";
@@ -35,7 +35,7 @@ export default function AuthPage() {
       if (error) throw error;
 
       setMsg("Success! Redirecting…");
-      router.push("/targets");
+      router.push("/");
     } catch (err: any) {
       setMsg(err?.message || "Auth error");
     } finally {
