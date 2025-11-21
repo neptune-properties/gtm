@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseClient";
+import type { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 export default function Nav() {
   const [email, setEmail] = useState<string | null>(null);
@@ -12,12 +13,12 @@ export default function Nav() {
     const supabase = supabaseBrowser();
 
     // Get current user
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data } : {data : {user: User | null }}) => {
       setEmail(data.user?.email ?? null);
     });
 
     // Keep session in sync
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       setEmail(session?.user?.email ?? null);
     });
 
