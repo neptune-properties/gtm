@@ -9,28 +9,41 @@
     · typedRoutes
 
  [37m[1m [22m[39m Creating an optimized production build ...
+SyntaxError: Expected ',' or '}' after property value in JSON at position 518 (line 21 column 9)
+    at JSON.parse (<anonymous>)
+    at patchIncorrectLockfile (/Users/nwlvrd/Atlas/gtm/node_modules/.pnpm/next@14.2.15_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/lib/patch-incorrect-lockfile.js:94:33)
+SyntaxError: Expected ',' or '}' after property value in JSON at position 518 (line 21 column 9)
+    at JSON.parse (<anonymous>)
+    at patchIncorrectLockfile (/Users/nwlvrd/Atlas/gtm/node_modules/.pnpm/next@14.2.15_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/lib/patch-incorrect-lockfile.js:94:33)
+SyntaxError: Expected ',' or '}' after property value in JSON at position 518 (line 21 column 9)
+    at JSON.parse (<anonymous>)
+    at patchIncorrectLockfile (/Users/nwlvrd/Atlas/gtm/node_modules/.pnpm/next@14.2.15_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/lib/patch-incorrect-lockfile.js:94:33)
  [32m[1m✓[22m[39m Compiled successfully
 [?25l [37m[1m [22m[39m Linting and checking validity of types  [36m.[39m [33m[1m⚠[22m[39m No ESLint configuration detected. Run [1m[36mnext lint[39m[22m to begin setup
 [2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Linting and checking validity of types  [36m...[39m[2K[1G[?25h [37m[1m [22m[39m Linting and checking validity of types     [32m[1m✓[22m[39m Linting and checking validity of types 
-[?25l [37m[1m [22m[39m Collecting page data  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting page data  [36m..[39m[2K[1G[?25h [37m[1m [22m[39m Collecting page data     [32m[1m✓[22m[39m Collecting page data 
-[?25l [37m[1m [22m[39m Generating static pages (0/13)  [36m[    ][39m[2K[1G [37m[1m [22m[39m Generating static pages (11/13)  [36m[=   ][39m[2K[1G[?25h [32m[1m✓[22m[39m Generating static pages (13/13)
+[?25l [37m[1m [22m[39m Collecting page data  [36m.[39m[2K[1G[?25hSyntaxError: Expected ',' or '}' after property value in JSON at position 518 (line 21 column 9)
+    at JSON.parse (<anonymous>)
+    at patchIncorrectLockfile (/Users/nwlvrd/Atlas/gtm/node_modules/[4m.pnpm[24m/next@14.2.15_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/[4mnext[24m/dist/lib/patch-incorrect-lockfile.js:94:33)
+[?25l [37m[1m [22m[39m Collecting page data  [36m.[39m[2K[1G[?25h [37m[1m [22m[39m Collecting page data     [32m[1m✓[22m[39m Collecting page data 
+[?25l [37m[1m [22m[39m Generating static pages (0/14)  [36m[    ][39m[2K[1G [37m[1m [22m[39m Generating static pages (11/14)  [36m[=   ][39m[2K[1G[?25h [32m[1m✓[22m[39m Generating static pages (14/14)
 [?25l [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[?25l [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G[?25h [37m[1m [22m[39m Collecting build traces     [32m[1m✓[22m[39m Collecting build traces 
 [2K[1G[?25h [37m[1m [22m[39m Finalizing page optimization     [32m[1m✓[22m[39m Finalizing page optimization 
 
 [4mRoute (app)[24m                              [4mSize[24m     [4mFirst Load JS[24m
-┌ ○ /                                    16.4 kB         [37m[1m104 kB[22m[39m
+┌ ○ /                                    16.5 kB         [37m[1m104 kB[22m[39m
 ├ ○ /_not-found                          875 B            [37m[1m88 kB[22m[39m
+├ ƒ /api/email-sends                     0 B                [37m[1m0 B[22m[39m
 ├ ƒ /api/email/open/[id]                 0 B                [37m[1m0 B[22m[39m
 ├ ƒ /api/email/send                      0 B                [37m[1m0 B[22m[39m
 ├ ƒ /api/source/apollo/search            0 B                [37m[1m0 B[22m[39m
 ├ ƒ /api/targets                         0 B                [37m[1m0 B[22m[39m
 ├ ƒ /api/targets/status                  0 B                [37m[1m0 B[22m[39m
 ├ ƒ /api/templates                       0 B                [37m[1m0 B[22m[39m
-├ ○ /auth                                1.18 kB         [37m[1m137 kB[22m[39m
+├ ○ /auth                                1.2 kB          [37m[1m137 kB[22m[39m
 ├ ○ /campaigns                           137 B          [37m[1m87.3 kB[22m[39m
 ├ ○ /metrics                             12.4 kB         [37m[1m149 kB[22m[39m
 ├ ○ /targets                             631 B          [37m[1m87.8 kB[22m[39m
-└ ○ /templates                           14.9 kB         [37m[1m151 kB[22m[39m
+└ ○ /templates                           14.9 kB         [37m[1m102 kB[22m[39m
 + First Load JS shared by all            [37m[1m87.2 kB[22m[39m
   ├ chunks/796-71225996d2ba3818.js       31.6 kB
   ├ chunks/b4553ad9-c5caf75219b277bc.js  53.7 kB

@@ -418,7 +418,7 @@ export default function TargetsTable() {
                       <span>
                         {h.isPlaceholder
                           ? null
-                          : asReactNode(flexRender(header.column.columnDef.header, header.getContext()))}
+                          : asReactNode(flexRender(h.column.columnDef.header, h.getContext()))}
                       </span>
                       <span style={{ color: '#9ca3af' }}>
                         {{ asc: '↑', desc: '↓' }[h.column.getIsSorted() as string] ?? '↕'}

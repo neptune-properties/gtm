@@ -1,7 +1,5 @@
 
 
 > @neptune/shared@0.1.0 build /Users/nwlvrd/Atlas/gtm/packages/shared
-
-> @neptune/shared@0.1.0 build /home/kritika/atlas_digital/gtm/packages/shared
 > tsc -p tsconfig.json
 
