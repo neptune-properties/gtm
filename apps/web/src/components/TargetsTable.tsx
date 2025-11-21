@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -192,7 +192,6 @@ export default function TargetsTable() {
     });
   };
 
-  // Define columns
   const columns = useMemo<ColumnDef<Target>[]>(
     () => [
       {
@@ -239,6 +238,7 @@ export default function TargetsTable() {
         accessorKey: 'source',
         header: 'Source',
       },
+      { accessorKey: 'source', header: 'Source' },
       {
         accessorKey: 'status',
         header: 'Status',
@@ -251,6 +251,38 @@ export default function TargetsTable() {
         ),
         filterFn: 'equals',
       },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+          const target = row.original;
+          return (
+            <button
+              onClick={() => {
+                const searchParams = new URLSearchParams({
+                  targetId: target.id,
+                  targetName: target.owner_name,
+                  targetCompany: target.company,
+                  targetProperty: target.property,
+                  targetEmail: target.email,
+                  targetCity: target.city,
+                });
+                window.location.href = `/templates?${searchParams.toString()}`;
+              }}
+              style={{
+                backgroundColor: '#2563eb',
+                color: '#fff',
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Send Email
+            </button>
+          );
+        },
+      },
     ],
     [selectedTargets]
   );
@@ -258,10 +290,7 @@ export default function TargetsTable() {
   const table = useReactTable({
     data,
     columns,
-    state: {
-      sorting,
-      columnFilters,
-    },
+    state: { sorting, columnFilters },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -283,8 +312,8 @@ export default function TargetsTable() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
-        <div style={{ fontSize: '18px' }}>Loading targets...</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+        <div style={{ fontSize: 18 }}>Loading targets...</div>
       </div>
     );
   }
@@ -311,62 +340,39 @@ export default function TargetsTable() {
         </button>
 
         {/* Filters */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
-          {/* City Filter */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label htmlFor="city-filter" style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
-              Filter by City
-            </label>
+            <label style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Filter by City</label>
             <select
-              id="city-filter"
-              style={{ 
-                padding: '8px 12px', 
-                border: '1px solid #d1d5db', 
-                borderRadius: '4px',
-                outline: 'none'
-              }}
+              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4 }}
               value={(table.getColumn('city')?.getFilterValue() as string) ?? ''}
-              onChange={(e) =>
-                table.getColumn('city')?.setFilterValue(e.target.value || undefined)
-              }
+              onChange={(e) => table.getColumn('city')?.setFilterValue(e.target.value || undefined)}
             >
               <option value="">All Cities</option>
-              {uniqueCities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
+              {uniqueCities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Status Filter */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label htmlFor="status-filter" style={{ fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
-              Filter by Status
-            </label>
+            <label style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Filter by Status</label>
             <select
-              id="status-filter"
-              style={{ 
-                padding: '8px 12px', 
-                border: '1px solid #d1d5db', 
-                borderRadius: '4px',
-                outline: 'none'
-              }}
+              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4 }}
               value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
-              onChange={(e) =>
-                table.getColumn('status')?.setFilterValue(e.target.value || undefined)
-              }
+              onChange={(e) => table.getColumn('status')?.setFilterValue(e.target.value || undefined)}
             >
               <option value="">All Statuses</option>
-              {uniqueStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
+              {uniqueStatuses.map((s) => (
+                <option key={s} value={s}>
+                  {s}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Clear Filters */}
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'end' }}>
             <button
               onClick={() => table.resetColumnFilters()}
@@ -386,19 +392,20 @@ export default function TargetsTable() {
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+      <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: 8 }}>
         <table style={{ minWidth: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ backgroundColor: '#f9fafb' }}>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+            {table.getHeaderGroups().map((hg) => (
+              <tr key={hg.id}>
+                {hg.headers.map((h) => (
                   <th
-                    key={header.id}
+                    key={h.id}
+                    onClick={h.column.getToggleSortingHandler()}
                     style={{
                       padding: '12px 24px',
                       textAlign: 'left',
-                      fontSize: '12px',
-                      fontWeight: '500',
+                      fontSize: 12,
+                      fontWeight: 500,
                       color: '#6b7280',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
@@ -406,19 +413,15 @@ export default function TargetsTable() {
                       userSelect: 'none',
                       borderBottom: '1px solid #e5e7eb',
                     }}
-                    onClick={header.column.getToggleSortingHandler()}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span>
-                        {header.isPlaceholder
+                        {h.isPlaceholder
                           ? null
                           : asReactNode(flexRender(header.column.columnDef.header, header.getContext()))}
                       </span>
                       <span style={{ color: '#9ca3af' }}>
-                        {{
-                          asc: '↑',
-                          desc: '↓',
-                        }[header.column.getIsSorted() as string] ?? '↕'}
+                        {{ asc: '↑', desc: '↓' }[h.column.getIsSorted() as string] ?? '↕'}
                       </span>
                     </div>
                   </th>
@@ -541,17 +544,16 @@ export default function TargetsTable() {
               outline: 'none',
             }}
           >
-            {[10, 20, 30, 40, 50].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
+            {[10, 20, 30, 40, 50].map((n) => (
+              <option key={n} value={n}>
+                Show {n}
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Results summary */}
-      <div style={{ marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
+      <div style={{ marginTop: 16, fontSize: 14, color: '#6b7280' }}>
         Showing {table.getRowModel().rows.length} of {data.length} targets
       </div>
     </div>
