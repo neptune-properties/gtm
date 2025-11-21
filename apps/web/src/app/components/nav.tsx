@@ -46,7 +46,6 @@ export default function Nav() {
       {/* Main nav links */}
       <nav style={{ display: "flex", gap: 12 }}>
         <Link href="/">Home</Link>
-        <Link href="/targets">Targets</Link>
         <Link href="/templates">Templates</Link>
         <Link href="/campaigns">Campaigns</Link>
         <Link href={{ pathname: "/metrics" }}>Metrics</Link>
