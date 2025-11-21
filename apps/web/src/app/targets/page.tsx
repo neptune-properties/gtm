@@ -1,3 +1,6 @@
+"use client"
+export const dynamic = "force-dynamic";
+
 import { exportCSV } from "@/lib/csvExport"
 
 export default function TargetsPage() {

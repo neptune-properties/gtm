@@ -1,4 +1,3 @@
-// src/app/metrics/page.tsx
 "use client"
 import { useState } from "react"
 import Kanban from "./Kanban"

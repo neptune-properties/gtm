@@ -1,3 +1,4 @@
+"use client"
 import { useState, useEffect } from "react"
 import styled from "styled-components"
 import { supabaseBrowser } from "@/lib/supabaseClient"  // Use the correct browser-side Supabase client

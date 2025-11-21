@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
@@ -148,6 +148,8 @@ export default function TargetsTable() {
       console.error('Error updating status:', error);
     }
   };
+
+  const asReactNode = (v: unknown): React.ReactNode => typeof v === 'bigint' ? v.toString() : (v as React.ReactNode);
 
   // Export selected targets data to CSV
   const exportCSV = () => {
@@ -410,7 +412,7 @@ export default function TargetsTable() {
                       <span>
                         {header.isPlaceholder
                           ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                          : asReactNode(flexRender(header.column.columnDef.header, header.getContext()))}
                       </span>
                       <span style={{ color: '#9ca3af' }}>
                         {{
@@ -437,7 +439,7 @@ export default function TargetsTable() {
                       color: '#111827',
                     }}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    {asReactNode(flexRender(cell.column.columnDef.cell, cell.getContext()))}
                   </td>
                 ))}
               </tr>

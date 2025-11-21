@@ -1,5 +1,5 @@
-// apps/web/src/app/templates/page.tsx
-"use client";
+"use client"
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -21,7 +21,7 @@ const TemplateSchema = z.object({
 type FormState = {
   id?: string;
   name: string;
-  subject: string;
+  subject: string;  
   body_md: string;
   error?: string;
   saving: boolean;

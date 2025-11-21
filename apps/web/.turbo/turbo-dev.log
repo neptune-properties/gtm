@@ -10,26 +10,5 @@
     · typedRoutes
 
  [32m[1m✓[22m[39m Starting...
- [32m[1m✓[22m[39m Ready in 998ms
- [37m[1m○[22m[39m Compiling / ...
- [32m[1m✓[22m[39m Compiled / in 993ms (656 modules)
- GET / [32m200[39m in 1089ms
- [37m[1m○[22m[39m Compiling /api/targets ...
- [32m[1m✓[22m[39m Compiled /api/targets in 598ms (445 modules)
- GET /api/targets [32m200[39m in 749ms
- GET /api/targets [32m200[39m in 2ms
- [32m[1m✓[22m[39m Compiled /templates in 204ms (795 modules)
- [32m[1m✓[22m[39m Compiled /api/templates in 45ms (462 modules)
- GET /api/templates [32m200[39m in 890ms
- GET /api/templates [32m200[39m in 136ms
- DELETE /api/templates?id=d993b5e4-fa85-4e8c-9aa6-1dae501a0e75 [32m200[39m in 587ms
- GET /templates [32m200[39m in 69ms
- GET /api/templates [32m200[39m in 222ms
- GET /api/templates [32m200[39m in 100ms
- [32m[1m✓[22m[39m Compiled in 88ms (349 modules)
- [32m[1m✓[22m[39m Compiled /api/templates in 49ms (460 modules)
- PUT /api/templates?id=0bb8151b-b14b-4a79-a622-e5a4e2ea5cde [32m200[39m in 441ms
- GET /templates [32m200[39m in 38ms
- GET /api/templates [32m200[39m in 128ms
- GET /api/templates [32m200[39m in 113ms
+ [32m[1m✓[22m[39m Ready in 1002ms
 [?25h
