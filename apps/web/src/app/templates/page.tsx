@@ -1,13 +1,23 @@
-'use client';
+"use client"
+export const dynamic = "force-dynamic";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { z } from 'zod';
+
+
+// requirements for templates
+const TemplateSchema = z.object({
+  name: z.string().min(1, "Template name is required"),
+  subject: z.string().min(1, "Subject is required"),
+  body_md: z.string().min(20, "Body must be at least 20 characters long"),
+});
+
 
 type EmailTemplate = {
   id: string;
   name: string;
-  subject: string;
+  subject: string;  
   body_md: string;
 };
 type Target = {
@@ -19,13 +29,6 @@ type Target = {
   email: string;
   status: 'new' | 'emailed' | 'replied' | 'called' | 'converted';
 };
-
-const TemplateSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  subject: z.string(),
-  body_md: z.string(),
-});
 
 export default function TemplatesPage() {
   const router = useRouter();

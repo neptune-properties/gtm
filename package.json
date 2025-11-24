@@ -1,7 +1,7 @@
 {
   "name": "neptune-gtm",
   "private": true,
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.0.0",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
@@ -11,16 +11,17 @@
   },
   "devDependencies": {
     "@types/mustache": "^4.2.6",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
-    "pnpm": "^10.20.0",
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
+    "pnpm": "^10.23.0",
     "prettier": "^3.6.2",
-    "turbo": "^2.6.0"
+    "turbo": "^2.6.1"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "styled-components": "^6.1.19",
     "zod": "^4.1.12"
   }
 }
