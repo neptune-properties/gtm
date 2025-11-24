@@ -336,7 +336,7 @@ export default function TargetsTable() {
             marginBottom: '16px',
           }}
         >
-          Export CSV
+          Export Selected Targets
         </button>
 
         {/* Filters */}
