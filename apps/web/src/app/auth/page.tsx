@@ -16,7 +16,7 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setMsg("");
-    const supabase = supabaseBrowser(rememberMe);
+    const supabase = supabaseBrowser();
 
     try {
       const { error } = await supabase.auth.signInWithPassword({ 

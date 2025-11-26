@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { supabaseBrowser } from "@/lib/supabaseClient";
 
 export default function ApolloSearchModal({
   open,
@@ -11,7 +10,6 @@ export default function ApolloSearchModal({
   onClose: (open: boolean) => void;
   onAdded?: () => void;
 }) {
-  const supabase = supabaseBrowser();
   const [filters, setFilters] = useState({
     company: "",
     city: "",
