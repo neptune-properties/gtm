@@ -10,9 +10,12 @@ type EmailTemplate = {
   subject: string;
   body_md: string;
 };
+
 type Target = {
   id: string;
   owner_name: string;
+  first_name?: string;
+  last_name?: string;
   company: string;
   property: string;
   city: string;
@@ -88,9 +91,18 @@ export default function TemplatesPage() {
 
   const substituted = useMemo(() => {
     if (!selected || !target) return { subject: '', body: '' };
+
+    // Derive first_name / last_name from owner_name
+    const fullName = target.owner_name || '';
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ');
+
     const data = {
-      owner_name: target.owner_name || '',
-      name: target.owner_name || '', // Alternative placeholder
+      owner_name: fullName,
+      first_name: firstName,
+      last_name: lastName,
+      name: firstName || fullName, // legacy {{name}} support
       company: target.company || '',
       property: target.property || '',
       city: target.city || '',
@@ -308,7 +320,7 @@ export default function TemplatesPage() {
                   type="text"
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  placeholder="e.g., Introduction from {{owner_name}} about {{property}}"
+                  placeholder="e.g., Introduction from {{first_name}} about {{property}}"
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -322,12 +334,12 @@ export default function TemplatesPage() {
               
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
-                  Email Body (use {'{{owner_name}}'}, {'{{company}}'}, {'{{property}}'}, etc.)
+                  Email Body (use {'{{first_name}}'}, {'{{last_name}}'}, {'{{owner_name}}'}, {'{{company}}'}, {'{{property}}'}, etc.)
                 </label>
                 <textarea
                   value={formData.body_md}
                   onChange={(e) => setFormData({ ...formData, body_md: e.target.value })}
-                  placeholder="Hi {{owner_name}}, ..."
+                  placeholder="Hi {{first_name}}, ..."
                   rows={8}
                   style={{
                     width: '100%',
