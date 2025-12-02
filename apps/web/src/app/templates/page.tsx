@@ -49,6 +49,10 @@ export default function TemplatesPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // NEW: editable subject/body state for preview
+  const [editedSubject, setEditedSubject] = useState('');
+  const [editedBody, setEditedBody] = useState('');
+
   // load templates
   useEffect(() => {
     (async () => {
@@ -89,6 +93,7 @@ export default function TemplatesPage() {
     setSelected(t);
   }, [selectedId, templates]);
 
+  // Substitution logic (what the template would look like before manual edits)
   const substituted = useMemo(() => {
     if (!selected || !target) return { subject: '', body: '' };
 
@@ -122,6 +127,17 @@ export default function TemplatesPage() {
     return { subject, body };
   }, [selected, target]);
 
+  // NEW: when template/target/substituted changes, reset editable fields
+  useEffect(() => {
+    if (selected && target) {
+      setEditedSubject(substituted.subject);
+      setEditedBody(substituted.body);
+    } else {
+      setEditedSubject('');
+      setEditedBody('');
+    }
+  }, [substituted.subject, substituted.body, selected, target]);
+
   async function handleSend() {
     setError(null);
     if (!target || !selected) {
@@ -137,13 +153,16 @@ export default function TemplatesPage() {
 
     setSending(true);
     try {
-      // Use our existing email-sends API which handles both the email_sends insert and target status update
+      // Use our existing email-sends API
+      // Pass editedSubject / editedBody so the backend can use the final text
       const sendRes = await fetch('/api/email-sends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetId: target.id,
           templateId: selected.id,
+          subject: editedSubject,
+          body: editedBody,
         }),
       });
       
@@ -548,7 +567,7 @@ export default function TemplatesPage() {
           {error && <p style={{ color: '#dc2626', fontSize: '14px' }}>{error}</p>}
         </div>
 
-        {/* Right: preview */}
+        {/* Right: preview + editing */}
         <div style={{ 
           border: '1px solid #e5e7eb', 
           borderRadius: '8px', 
@@ -562,24 +581,41 @@ export default function TemplatesPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
                 <div style={{ fontSize: '12px', textTransform: 'uppercase', color: '#6b7280', marginBottom: '4px' }}>Subject</div>
-                <div style={{ fontWeight: '500', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '4px', backgroundColor: '#f9fafb' }}>
-                  {substituted.subject}
-                </div>
+                <input
+                  type="text"
+                  value={editedSubject}
+                  onChange={(e) => setEditedSubject(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px',
+                    backgroundColor: '#f9fafb',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                />
               </div>
               <div>
                 <div style={{ fontSize: '12px', textTransform: 'uppercase', color: '#6b7280', marginBottom: '4px' }}>Body</div>
-                <pre style={{ 
-                  whiteSpace: 'pre-wrap', 
-                  fontSize: '14px',
-                  padding: '12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px',
-                  backgroundColor: '#f9fafb',
-                  margin: 0,
-                  fontFamily: 'inherit'
-                }}>
-                  {substituted.body}
-                </pre>
+                <textarea
+                  value={editedBody}
+                  onChange={(e) => setEditedBody(e.target.value)}
+                  rows={10}
+                  style={{ 
+                    width: '100%',
+                    whiteSpace: 'pre-wrap', 
+                    fontSize: '14px',
+                    padding: '12px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px',
+                    backgroundColor: '#f9fafb',
+                    margin: 0,
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    resize: 'vertical'
+                  }}
+                />
               </div>
             </div>
           )}
