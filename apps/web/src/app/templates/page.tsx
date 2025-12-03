@@ -103,45 +103,58 @@ export default function TemplatesPage() {
     return { subject, body };
   }, [selected, target]);
 
-  async function handleSend() {
+  async function handleSendEmail() {
     setError(null);
     if (!target || !selected) {
       setError('Pick a template and make sure a targetId is provided.');
       return;
     }
-    // validate
+  
     const parsed = TemplateSchema.safeParse(selected);
     if (!parsed.success) {
       setError('Template schema invalid.');
       return;
     }
-
+  
     setSending(true);
     try {
-      // Use our existing email-sends API which handles both the email_sends insert and target status update
-      const sendRes = await fetch('/api/email-sends', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: target.email,
+          subject: substituted.subject,
+          html: substituted.body,
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (!data.success) {
+        throw new Error(data.error || "Email failed to send.");
+      }
+  
+      alert("Email sent successfully!");
+  
+      // OPTIONAL: update target status in your DB (emailed)
+      await fetch("/api/email-sends", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           targetId: target.id,
           templateId: selected.id,
         }),
       });
-      
-      if (!sendRes.ok) {
-        const j = await sendRes.json().catch(() => ({}));
-        throw new Error(j.error || 'Failed to send email.');
-      }
-
-      alert('Email sent successfully! Target status updated to "emailed".');
-      router.push('/'); // back to targets
-    } catch (e: any) {
-      console.error(e);
-      setError(e.message || 'Send failed');
+  
+      router.push("/");
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Send failed");
     } finally {
       setSending(false);
     }
   }
+  
 
   return (
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
@@ -205,7 +218,7 @@ export default function TemplatesPage() {
 
           <button
             disabled={!selected || !target || sending}
-            onClick={handleSend}
+            onClick={handleSendEmail}
             style={{
               backgroundColor: !selected || !target || sending ? '#9ca3af' : '#16a34a',
               color: 'white',
