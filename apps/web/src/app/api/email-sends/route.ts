@@ -64,8 +64,6 @@ export async function GET() {
         *,
         targets (
           owner_name,
-          first_name,
-          last_name,
           company,
           email
         ),
