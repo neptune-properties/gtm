@@ -10,9 +10,12 @@ type EmailTemplate = {
   subject: string;
   body_md: string;
 };
+
 type Target = {
   id: string;
   owner_name: string;
+  first_name?: string;
+  last_name?: string;
   company: string;
   property: string;
   city: string;
@@ -45,6 +48,10 @@ export default function TemplatesPage() {
   const [formData, setFormData] = useState({ name: '', subject: '', body_md: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // NEW: editable subject/body state for preview
+  const [editedSubject, setEditedSubject] = useState('');
+  const [editedBody, setEditedBody] = useState('');
 
   // load templates
   useEffect(() => {
@@ -86,11 +93,21 @@ export default function TemplatesPage() {
     setSelected(t);
   }, [selectedId, templates]);
 
+  // Substitution logic (what the template would look like before manual edits)
   const substituted = useMemo(() => {
     if (!selected || !target) return { subject: '', body: '' };
+
+    // Derive first_name / last_name from owner_name
+    const fullName = target.owner_name || '';
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ');
+
     const data = {
-      owner_name: target.owner_name || '',
-      name: target.owner_name || '', // Alternative placeholder
+      owner_name: fullName,
+      first_name: firstName,
+      last_name: lastName,
+      name: firstName || fullName, // legacy {{name}} support
       company: target.company || '',
       property: target.property || '',
       city: target.city || '',
@@ -110,6 +127,17 @@ export default function TemplatesPage() {
     return { subject, body };
   }, [selected, target]);
 
+  // NEW: when template/target/substituted changes, reset editable fields
+  useEffect(() => {
+    if (selected && target) {
+      setEditedSubject(substituted.subject);
+      setEditedBody(substituted.body);
+    } else {
+      setEditedSubject('');
+      setEditedBody('');
+    }
+  }, [substituted.subject, substituted.body, selected, target]);
+
   async function handleSend() {
     setError(null);
     if (!target || !selected) {
@@ -125,13 +153,16 @@ export default function TemplatesPage() {
 
     setSending(true);
     try {
-      // Use our existing email-sends API which handles both the email_sends insert and target status update
+      // Use our existing email-sends API
+      // Pass editedSubject / editedBody so the backend can use the final text
       const sendRes = await fetch('/api/email-sends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetId: target.id,
           templateId: selected.id,
+          subject: editedSubject,
+          body: editedBody,
         }),
       });
       
@@ -308,7 +339,7 @@ export default function TemplatesPage() {
                   type="text"
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  placeholder="e.g., Introduction from {{owner_name}} about {{property}}"
+                  placeholder="e.g., Introduction from {{first_name}} about {{property}}"
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -322,12 +353,12 @@ export default function TemplatesPage() {
               
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
-                  Email Body (use {'{{owner_name}}'}, {'{{company}}'}, {'{{property}}'}, etc.)
+                  Email Body (use {'{{first_name}}'}, {'{{last_name}}'}, {'{{owner_name}}'}, {'{{company}}'}, {'{{property}}'}, etc.)
                 </label>
                 <textarea
                   value={formData.body_md}
                   onChange={(e) => setFormData({ ...formData, body_md: e.target.value })}
-                  placeholder="Hi {{owner_name}}, ..."
+                  placeholder="Hi {{first_name}}, ..."
                   rows={8}
                   style={{
                     width: '100%',
@@ -536,7 +567,7 @@ export default function TemplatesPage() {
           {error && <p style={{ color: '#dc2626', fontSize: '14px' }}>{error}</p>}
         </div>
 
-        {/* Right: preview */}
+        {/* Right: preview + editing */}
         <div style={{ 
           border: '1px solid #e5e7eb', 
           borderRadius: '8px', 
@@ -550,24 +581,41 @@ export default function TemplatesPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
                 <div style={{ fontSize: '12px', textTransform: 'uppercase', color: '#6b7280', marginBottom: '4px' }}>Subject</div>
-                <div style={{ fontWeight: '500', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '4px', backgroundColor: '#f9fafb' }}>
-                  {substituted.subject}
-                </div>
+                <input
+                  type="text"
+                  value={editedSubject}
+                  onChange={(e) => setEditedSubject(e.target.value)}
+                  style={{
+                    width: '97%',
+                    padding: '8px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px',
+                    backgroundColor: '#f9fafb',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                />
               </div>
               <div>
                 <div style={{ fontSize: '12px', textTransform: 'uppercase', color: '#6b7280', marginBottom: '4px' }}>Body</div>
-                <pre style={{ 
-                  whiteSpace: 'pre-wrap', 
-                  fontSize: '14px',
-                  padding: '12px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px',
-                  backgroundColor: '#f9fafb',
-                  margin: 0,
-                  fontFamily: 'inherit'
-                }}>
-                  {substituted.body}
-                </pre>
+                <textarea
+                  value={editedBody}
+                  onChange={(e) => setEditedBody(e.target.value)}
+                  rows={10}
+                  style={{ 
+                    width: '95.5%',
+                    whiteSpace: 'pre-wrap', 
+                    fontSize: '14px',
+                    padding: '12px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px',
+                    backgroundColor: '#f9fafb',
+                    margin: 0,
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    resize: 'vertical'
+                  }}
+                />
               </div>
             </div>
           )}
