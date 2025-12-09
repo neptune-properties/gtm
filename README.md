@@ -22,7 +22,7 @@ a shared TypeScript package, and SQL migrations for Supabase. Deployed on Vercel
 2. **Install** pnpm (`npm i -g pnpm`)
 3. **Install deps**: `pnpm install`
 4. **Configure env**:
-   - Copy `.env.example` to `apps/web/.env.local` and fill values (see slack channel)
+   - Copy `.env.example` to `apps/web/.env.local` and fill values (see msg channel)
 5. **Run dev**: `pnpm dev` → http://localhost:3000
 
 ## Supabase

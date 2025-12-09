@@ -10,9 +10,12 @@ type EmailTemplate = {
   subject: string;
   body_md: string;
 };
+
 type Target = {
   id: string;
   owner_name: string;
+  first_name?: string;
+  last_name?: string;
   company: string;
   property: string;
   city: string;
@@ -122,11 +125,21 @@ export default function TemplatesPage() {
     setSelected(t);
   }, [selectedId, templates]);
 
+  // Substitution logic (what the template would look like before manual edits)
   const substituted = useMemo(() => {
     if (!selected || !target) return { subject: '', body: '' };
+
+    // Derive first_name / last_name from owner_name
+    const fullName = target.owner_name || '';
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ');
+
     const data = {
-      owner_name: target.owner_name || '',
-      name: target.owner_name || '', // Alternative placeholder
+      owner_name: fullName,
+      first_name: firstName,
+      last_name: lastName,
+      name: firstName || fullName, // legacy {{name}} support
       company: target.company || '',
       property: target.property || '',
       city: target.city || '',
@@ -146,6 +159,17 @@ export default function TemplatesPage() {
     return { subject, body };
   }, [selected, target]);
 
+  // NEW: when template/target/substituted changes, reset editable fields
+  useEffect(() => {
+    if (selected && target) {
+      setEditedSubject(substituted.subject);
+      setEditedBody(substituted.body);
+    } else {
+      setEditedSubject('');
+      setEditedBody('');
+    }
+  }, [substituted.subject, substituted.body, selected, target]);
+
   async function handleSend() {
     setError(null);
     if (!target || !selected) {
@@ -161,13 +185,16 @@ export default function TemplatesPage() {
 
     setSending(true);
     try {
-      // Use our existing email-sends API which handles both the email_sends insert and target status update
+      // Use our existing email-sends API
+      // Pass editedSubject / editedBody so the backend can use the final text
       const sendRes = await fetch('/api/email-sends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetId: target.id,
           templateId: selected.id,
+          subject: editedSubject,
+          body: editedBody,
         }),
       });
       
