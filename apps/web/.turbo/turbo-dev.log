@@ -10,124 +10,54 @@
     · typedRoutes
 
  [32m[1m✓[22m[39m Starting...
- [32m[1m✓[22m[39m Ready in 1002ms
-[?25h
 SyntaxError: Expected ',' or '}' after property value in JSON at position 518 (line 21 column 9)
     at JSON.parse (<anonymous>)
     at patchIncorrectLockfile (/home/jialigood/neptune/gtm/node_modules/[4m.pnpm[24m/next@14.2.15_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/[4mnext[24m/dist/lib/patch-incorrect-lockfile.js:94:33)
- [32m[1m✓[22m[39m Ready in 2.5s
+ [32m[1m✓[22m[39m Ready in 4.1s
  [37m[1m○[22m[39m Compiling / ...
- [32m[1m✓[22m[39m Compiled / in 2.1s (656 modules)
- GET / [32m200[39m in 2565ms
- [32m[1m✓[22m[39m Compiled /api/targets in 423ms (445 modules)
- GET /api/targets?ts=1762968270191 [32m200[39m in 1161ms
- GET /api/targets?ts=1762968270190 [32m200[39m in 1171ms
- [32m[1m✓[22m[39m Compiled /targets in 440ms (775 modules)
- GET /api/targets?ts=1762968279631 [32m200[39m in 268ms
- GET /api/targets?ts=1762968279632 [32m200[39m in 268ms
- [32m[1m✓[22m[39m Compiled in 523ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 178ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 323ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 352ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 343ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 301ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 242ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 157ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 191ms (664 modules)
- GET /targets [32m200[39m in 217ms
- [32m[1m✓[22m[39m Compiled /api/targets in 417ms (450 modules)
- GET /api/targets?ts=1762968590918 [32m200[39m in 811ms
- GET /api/targets?ts=1762968590919 [32m200[39m in 843ms
- [32m[1m✓[22m[39m Compiled in 214ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 249ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 244ms (775 modules)
- GET /targets [32m200[39m in 132ms
- GET /api/targets?ts=1762968637205 [32m200[39m in 246ms
- GET /api/targets?ts=1762968637204 [32m200[39m in 323ms
- [32m[1m✓[22m[39m Compiled in 449ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 313ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 218ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 219ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 305ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 135ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 225ms (664 modules)
- [31m[1m⨯[22m[39m ./src/app/components/apollo-search.tsx
-Error: 
-  [38;2;255;30;30m×[0m Unexpected token `div`. Expected jsx identifier
-     ╭─[[38;2;92;157;255;1;4m/home/jialigood/neptune/gtm/apps/web/src/app/components/apollo-search.tsx[0m:107:1]
- [2m107[0m │   if (!open) return null;
- [2m108[0m │ 
- [2m109[0m │   return (
- [2m110[0m │     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-     · [38;2;246;87;248m     ───[0m
- [2m111[0m │       <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
- [2m112[0m │         <button
- [2m113[0m │           onClick={() => onClose(false)}
-     ╰────
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/app/components/apollo-search.tsx
-./src/app/targets/page.tsx
- [31m[1m⨯[22m[39m ./src/app/components/apollo-search.tsx
-Error: 
-  [38;2;255;30;30m×[0m Unexpected token `div`. Expected jsx identifier
-     ╭─[[38;2;92;157;255;1;4m/home/jialigood/neptune/gtm/apps/web/src/app/components/apollo-search.tsx[0m:107:1]
- [2m107[0m │   if (!open) return null;
- [2m108[0m │ 
- [2m109[0m │   return (
- [2m110[0m │     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-     · [38;2;246;87;248m     ───[0m
- [2m111[0m │       <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
- [2m112[0m │         <button
- [2m113[0m │           onClick={() => onClose(false)}
-     ╰────
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./src/app/components/apollo-search.tsx
-./src/app/targets/page.tsx
- [32m[1m✓[22m[39m Compiled in 121ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 401ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 323ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 231ms (664 modules)
- GET /targets [32m200[39m in 139ms
+ [32m[1m✓[22m[39m Compiled / in 3.7s (656 modules)
+ GET / [32m200[39m in 4122ms
  [37m[1m○[22m[39m Compiling /api/targets ...
- [32m[1m✓[22m[39m Compiled /api/targets in 525ms (450 modules)
- GET /api/targets?ts=1762968925079 [32m200[39m in 981ms
- GET /api/targets?ts=1762968925080 [32m200[39m in 982ms
- [32m[1m✓[22m[39m Compiled in 243ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 194ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 160ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 399ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 197ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 279ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 191ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 356ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 156ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 179ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 251ms (775 modules)
- [32m[1m✓[22m[39m Compiled in 181ms (775 modules)
- GET /targets [32m200[39m in 138ms
- GET /api/targets?ts=1762968992985 [32m200[39m in 277ms
- GET /api/targets?ts=1762968992985 [32m200[39m in 327ms
- [32m[1m✓[22m[39m Compiled /api/source/apollo/search in 129ms (452 modules)
- POST /api/source/apollo/search [32m200[39m in 153ms
- POST /api/source/apollo/search [32m200[39m in 12ms
- [32m[1m✓[22m[39m Compiled in 228ms (339 modules)
- GET /targets [32m200[39m in 136ms
- [32m[1m✓[22m[39m Compiled /api/targets in 240ms (450 modules)
- GET /api/targets?ts=1762969529919 [32m200[39m in 885ms
- GET /api/targets?ts=1762969529919 [32m200[39m in 887ms
- [32m[1m✓[22m[39m Compiled in 465ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 394ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 157ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 175ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 155ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 141ms (664 modules)
- [32m[1m✓[22m[39m Compiled in 132ms (664 modules)
+ [32m[1m✓[22m[39m Compiled /api/targets in 2.1s (445 modules)
+ GET /api/targets?ts=1765057979744 [32m200[39m in 2841ms
+ GET /api/targets?ts=1765057979742 [32m200[39m in 2856ms
+ [37m[1m○[22m[39m Compiling /targets ...
+ [32m[1m✓[22m[39m Compiled /targets in 781ms (664 modules)
+ [32m[1m✓[22m[39m Compiled /api/targets in 201ms (450 modules)
+ GET /api/targets?ts=1765058059432 [32m200[39m in 513ms
+ GET /api/targets?ts=1765058059433 [32m200[39m in 520ms
+ GET /targets [32m200[39m in 210ms
+ GET /api/targets?ts=1765058287495 [32m200[39m in 268ms
+ GET /api/targets?ts=1765058287496 [32m200[39m in 326ms
+ [37m[1m○[22m[39m Compiling /templates ...
+ [32m[1m✓[22m[39m Compiled /templates in 759ms (801 modules)
+ GET /templates?targetId=a2333731-65fc-48e5-b540-9d339e714d88&targetName=jiali+goodwin+%28testing+email+send%29&targetCompany=null&targetProperty=null&targetEmail=jialig%40umich.edu&targetCity=null [32m200[39m in 945ms
+ [32m[1m✓[22m[39m Compiled /api/templates in 258ms (466 modules)
+ GET /api/templates [32m200[39m in 499ms
+ GET /api/templates [32m200[39m in 507ms
+ [32m[1m✓[22m[39m Compiled /api/email/send in 358ms (141 modules)
+ POST /api/email/send [33m400[39m in 1002ms
+ [32m[1m✓[22m[39m Compiled in 228ms (141 modules)
+ [32m[1m✓[22m[39m Compiled in 97ms (141 modules)
+ [37m[1m [22m[39m Reload env: .env.local
+ [32m[1m✓[22m[39m Compiled in 500ms (690 modules)
+ [37m[1m [22m[39m Reload env: .env.local
+ [32m[1m✓[22m[39m Compiled in 335ms (690 modules)
+ [32m[1m✓[22m[39m Compiled in 266ms (690 modules)
+ [37m[1m [22m[39m Reload env: .env.local
+ [32m[1m✓[22m[39m Compiled in 338ms (690 modules)
+ [37m[1m [22m[39m Reload env: .env.local
+ [32m[1m✓[22m[39m Compiled in 321ms (690 modules)
+ GET /templates?targetId=a2333731-65fc-48e5-b540-9d339e714d88&targetName=jiali+goodwin+%28testing+email+send%29&targetCompany=null&targetProperty=null&targetEmail=jialig%40umich.edu&targetCity=null [32m200[39m in 138ms
+ [37m[1m○[22m[39m Compiling /api/templates ...
+ [32m[1m✓[22m[39m Compiled /api/templates in 701ms (464 modules)
+ GET /api/templates [32m200[39m in 1055ms
+ GET /api/templates [32m200[39m in 1079ms
+ [32m[1m✓[22m[39m Compiled /api/email/send in 289ms (141 modules)
+ POST /api/email/send [32m200[39m in 921ms
+ [32m[1m✓[22m[39m Compiled /api/email-sends in 353ms (466 modules)
+ POST /api/email-sends [32m200[39m in 720ms
+ [32m[1m✓[22m[39m Compiled /api/targets in 313ms (468 modules)
+ GET /api/targets?ts=1765058421393 [32m200[39m in 464ms
+ GET /api/targets?ts=1765058421394 [32m200[39m in 421ms
 [?25h
