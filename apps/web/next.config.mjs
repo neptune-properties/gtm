@@ -3,7 +3,6 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: { typedRoutes: true },
   eslint: {
-    // while you’re unblocking CI:
     ignoreDuringBuilds: false,
   },
 };

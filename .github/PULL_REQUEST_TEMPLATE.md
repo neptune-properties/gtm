@@ -11,3 +11,4 @@
 ## Checklist
 - [ ] Lints / builds locally
 - [ ] No secrets committed (API keys, etc.)
+- [ ] "pnpm turbo run build" runs SUCCESSFULLY

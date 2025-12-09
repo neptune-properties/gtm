@@ -12,101 +12,243 @@ import {
   type SortingState,
   type ColumnFiltersState,
 } from '@tanstack/react-table';
+import { supabaseBrowser } from "@/lib/supabaseClient";  // Import Supabase client for the browser
 
-/** --- Status badge --- */
-const StatusBadge = ({ status }: { status: string | null | undefined }) => {
-  const s = (status || 'new') as 'new' | 'emailed' | 'replied' | 'called' | 'converted'
-  const colors = {
-    new: { backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' },
-    emailed: { backgroundColor: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' },
-    replied: { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' },
-    called: { backgroundColor: '#e9d5ff', color: '#7c2d12', border: '1px solid #c4b5fd' },
-    converted: { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #6ee7b7' },
-  } as const;
+type Target = {
+  id: string;
+  created_at: string;
+  owner_name: string;
+  company: string;
+  property: string;
+  city: string;
+  email: string;
+  source: string;
+  status: 'new' | 'emailed' | 'replied' | 'called' | 'converted';
+};
+
+const StatusDropdown = ({
+  status,
+  targetId,
+  onStatusChange
+}: {
+  status: Target['status'];
+  targetId: string;
+  onStatusChange: (targetId: string, newStatus: Target['status']) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const statusStyles = {
+    new: { backgroundColor: '#f3f4f6', color: '#374151' },
+    emailed: { backgroundColor: '#dbeafe', color: '#1e40af' },
+    replied: { backgroundColor: '#fef3c7', color: '#92400e' },
+    called: { backgroundColor: '#e9d5ff', color: '#7c2d12' },
+    converted: { backgroundColor: '#d1fae5', color: '#065f46' },
+  };
+
+  const statusOptions: Target['status'][] = ['new', 'emailed', 'replied', 'called', 'converted'];
 
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 8px',
-        borderRadius: '12px',
-        fontSize: '12px',
-        fontWeight: 500,
-        ...(colors[s] || colors.new),
-      }}
-    >
-      {s}
-    </span>
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        onClick={() => {
+          setIsOpen(!isOpen);
+        }}
+        style={{
+          padding: '4px 12px',
+          borderRadius: '6px',
+          border: '1px solid #d1d5db',
+          cursor: 'pointer',
+          ...statusStyles[status],
+        }}
+      >
+        {status} ▼
+      </button>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            background: 'white',
+            border: '1px solid #ccc',
+            zIndex: 1000,
+          }}
+        >
+          {statusOptions.map(option => (
+            <div
+              key={option}
+              onClick={() => {
+                onStatusChange(targetId, option);
+                setIsOpen(false);
+              }}
+              style={{ padding: '8px', cursor: 'pointer' }}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
-type Target = {
-  id: string
-  created_at: string
-  owner_name: string
-  company: string
-  property: string
-  city: string
-  email: string
-  source: string
-  status: string | null
-}
+export default function TargetsTable() {
+  const [data, setData] = useState<Target[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());  // Track selected targets
 
-export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }) {
-  const [data, setData] = useState<Target[]>([])
-  const [loading, setLoading] = useState(true)
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-
-  /** fetch from API */
-  const fetchTargets = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/targets?ts=${Date.now()}`, { cache: 'no-store' })
-      const json = await res.json()
-      const rows: Target[] = (json.targets || []).map((t: any) => ({
-        ...t,
-        status: t.status ?? 'new',
-      }))
-      setData(rows)
-    } catch (err) {
-      console.error('Error fetching targets:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
+  // Fetch data
   useEffect(() => {
-    fetchTargets()
-  }, [fetchTargets, refreshKey])
+    const fetchTargets = async () => {
+      try {
+        const response = await fetch('/api/targets');
+        const result = await response.json();
+        console.log('Fetched targets:', result); // Debug log
+        setData(result.targets || []);
+      } catch (error) {
+        console.error('Error fetching targets:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTargets();
+  }, []);
+
+  // Update status in backend
+  const updateStatus = async (targetId: string, newStatus: Target['status']) => {
+    try {
+      const response = await fetch('/api/targets/status', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetId,
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      // Update local state
+      setData(prevData =>
+        prevData.map(target =>
+          target.id === targetId ? { ...target, status: newStatus } : target
+        )
+      );
+
+      console.log(`Status updated for target ${targetId} to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const asReactNode = (v: unknown): React.ReactNode => typeof v === 'bigint' ? v.toString() : (v as React.ReactNode);
+
+  // Export selected targets data to CSV
+  const exportCSV = () => {
+    const selectedData = data.filter(target => selectedTargets.has(target.id));
+
+    const headers = ['Name', 'Company', 'Property', 'City', 'Email', 'Source'];
+    const rows = selectedData.map((target) => [
+      target.owner_name,
+      target.company,
+      target.property,
+      target.city,
+      target.email,
+      target.source,
+    ]);
+
+    const csvContent = [
+      headers.join(','), // headers row
+      ...rows.map(row => row.join(',')), // data rows
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'targets.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Toggle target selection
+  const toggleSelection = (id: string) => {
+    setSelectedTargets((prevSelectedTargets) => {
+      const newSelectedTargets = new Set(prevSelectedTargets);
+      if (newSelectedTargets.has(id)) {
+        newSelectedTargets.delete(id);
+      } else {
+        newSelectedTargets.add(id);
+      }
+      return newSelectedTargets;
+    });
+  };
 
   const columns = useMemo<ColumnDef<Target>[]>(
     () => [
-      { accessorKey: 'owner_name', header: 'Name' },
-      { accessorKey: 'company', header: 'Company' },
-      { accessorKey: 'property', header: 'Property' },
-      { accessorKey: 'city', header: 'City', filterFn: 'includesString' },
+      {
+        accessorKey: 'select', // Add column for selection
+        header: 'Select',
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={selectedTargets.has(row.original.id)}
+            onChange={() => toggleSelection(row.original.id)}
+          />
+        ),
+      },
+      {
+        accessorKey: 'owner_name',
+        header: 'Name',
+      },
+      {
+        accessorKey: 'company',
+        header: 'Company',
+      },
+      {
+        accessorKey: 'property',
+        header: 'Property',
+      },
+      {
+        accessorKey: 'city',
+        header: 'City',
+        filterFn: 'includesString',
+      },
       {
         accessorKey: 'email',
         header: 'Email',
-        cell: ({ getValue }) => {
-          const v = getValue() as string
-          return (
-            <a
-              href={`mailto:${v}`}
-              style={{ color: '#2563eb', textDecoration: 'underline' }}
-            >
-              {v}
-            </a>
-          )
-        },
+        cell: ({ getValue }) => (
+          <a
+            href={`mailto:${getValue() as string}`}
+            style={{ color: '#2563eb', textDecoration: 'underline' }}
+          >
+            {getValue() as string}
+          </a>
+        ),
+      },
+      {
+        accessorKey: 'source',
+        header: 'Source',
       },
       { accessorKey: 'source', header: 'Source' },
       {
         accessorKey: 'status',
         header: 'Status',
-        cell: ({ getValue }) => <StatusBadge status={getValue() as string} />,
+        cell: ({ row }) => (
+          <StatusDropdown 
+            status={row.original.status} 
+            targetId={row.original.id}
+            onStatusChange={updateStatus}
+          />
+        ),
         filterFn: 'equals',
       },
       {
@@ -142,7 +284,7 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
         },
       },
     ],
-    []
+    [selectedTargets]
   );
 
   const table = useReactTable({
@@ -157,14 +299,16 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const uniqueCities = useMemo(
-    () => [...new Set(data.map((d) => d.city).filter(Boolean))].sort(),
-    [data]
-  )
-  const uniqueStatuses = useMemo(
-    () => [...new Set(data.map((d) => d.status ?? 'new'))].sort(),
-    [data]
-  )
+  // Get unique cities and statuses for filters
+  const uniqueCities = useMemo(() => {
+    const cities = data.map((item) => item.city).filter(Boolean);
+    return [...new Set(cities)].sort();
+  }, [data]);
+
+  const uniqueStatuses = useMemo(() => {
+    const statuses = data.map((item) => item.status);
+    return [...new Set(statuses)].sort();
+  }, [data]);
 
   if (loading) {
     return (
@@ -175,9 +319,25 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>Targets</h2>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Targets</h2>
+
+        {/* Export CSV Button */}
+        <button
+          onClick={exportCSV}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '4px',
+            border: '1px solid #d1d5db',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            cursor: 'pointer',
+            marginBottom: '16px',
+          }}
+        >
+          Export Selected Targets
+        </button>
 
         {/* Filters */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
@@ -218,9 +378,9 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
               onClick={() => table.resetColumnFilters()}
               style={{
                 padding: '8px 16px',
-                fontSize: 14,
+                fontSize: '14px',
                 border: '1px solid #d1d5db',
-                borderRadius: 4,
+                borderRadius: '4px',
                 backgroundColor: 'white',
                 cursor: 'pointer',
               }}
@@ -250,6 +410,7 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
                       cursor: 'pointer',
+                      userSelect: 'none',
                       borderBottom: '1px solid #e5e7eb',
                     }}
                   >
@@ -257,7 +418,7 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
                       <span>
                         {h.isPlaceholder
                           ? null
-                          : flexRender(h.column.columnDef.header, h.getContext())}
+                          : asReactNode(flexRender(h.column.columnDef.header, h.getContext()))}
                       </span>
                       <span style={{ color: '#9ca3af' }}>
                         {{ asc: '↑', desc: '↓' }[h.column.getIsSorted() as string] ?? '↕'}
@@ -274,9 +435,14 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    style={{ padding: '16px 24px', whiteSpace: 'nowrap', fontSize: 14, color: '#111827' }}
+                    style={{
+                      padding: '16px 24px',
+                      whiteSpace: 'nowrap',
+                      fontSize: '14px',
+                      color: '#111827',
+                    }}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    {asReactNode(flexRender(cell.column.columnDef.cell, cell.getContext()))}
                   </td>
                 ))}
               </tr>
@@ -285,51 +451,97 @@ export default function TargetsTable({ refreshKey = 0 }: { refreshKey?: number }
         </table>
       </div>
 
+
       {/* Pagination */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {['<<', '<', '>', '>>'].map((symbol, i) => {
-            const actions = [
-              () => table.setPageIndex(0),
-              () => table.previousPage(),
-              () => table.nextPage(),
-              () => table.setPageIndex(table.getPageCount() - 1),
-            ]
-            const disabled = i < 2 ? !table.getCanPreviousPage() : !table.getCanNextPage()
-            return (
-              <button
-                key={symbol}
-                onClick={actions[i]}
-                disabled={disabled}
-                style={{
-                  padding: '4px 12px',
-                  fontSize: 14,
-                  border: '1px solid #d1d5db',
-                  borderRadius: 4,
-                  backgroundColor: 'white',
-                  cursor: disabled ? 'not-allowed' : 'pointer',
-                  opacity: disabled ? 0.5 : 1,
-                }}
-              >
-                {symbol}
-              </button>
-            )
-          })}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              backgroundColor: 'white',
+              cursor: table.getCanPreviousPage() ? 'pointer' : 'not-allowed',
+              opacity: table.getCanPreviousPage() ? 1 : 0.5,
+            }}
+          >
+            {'<<'}
+          </button>
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              backgroundColor: 'white',
+              cursor: table.getCanPreviousPage() ? 'pointer' : 'not-allowed',
+              opacity: table.getCanPreviousPage() ? 1 : 0.5,
+            }}
+          >
+            {'<'}
+          </button>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              backgroundColor: 'white',
+              cursor: table.getCanNextPage() ? 'pointer' : 'not-allowed',
+              opacity: table.getCanNextPage() ? 1 : 0.5,
+            }}
+          >
+            {'>'}
+          </button>
+          <button
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+            style={{
+              padding: '4px 12px',
+              fontSize: '14px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              backgroundColor: 'white',
+              cursor: table.getCanNextPage() ? 'pointer' : 'not-allowed',
+              opacity: table.getCanNextPage() ? 1 : 0.5,
+            }}
+          >
+            {'>>'}
+          </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 14 }}>
-            Page <strong>{table.getState().pagination.pageIndex + 1}</strong> of{' '}
-            {table.getPageCount()}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '14px' }}>
+            Page{' '}
+            <strong>
+              {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            </strong>
           </span>
           <select
             value={table.getState().pagination.pageSize}
-            onChange={(e) => table.setPageSize(Number(e.target.value))}
+            onChange={(e) => {
+              table.setPageSize(Number(e.target.value))
+            }}
             style={{
               padding: '4px 12px',
-              fontSize: 14,
+              fontSize: '14px',
               border: '1px solid #d1d5db',
-              borderRadius: 4,
+              borderRadius: '4px',
+              outline: 'none',
             }}
           >
             {[10, 20, 30, 40, 50].map((n) => (
