@@ -30,7 +30,7 @@ export default function Kanban() {
   // Fetch leads data from Supabase using supabaseBrowser
   useEffect(() => {
     const fetchLeads = async () => {
-      const { data, error } = await supabaseBrowser()
+      const { data, error } = await supabaseBrowser(true)
         .from("targets")
         .select("*")  // Fetch all columns
         .order("created_at", { ascending: false })  // Optional: Order by creation date
@@ -54,7 +54,7 @@ export default function Kanban() {
     )
 
     // Optionally, update the status in Supabase as well
-    supabaseBrowser()
+    supabaseBrowser(true)
       .from("targets")
       .update({ status: newStatus })
       .eq("id", id)

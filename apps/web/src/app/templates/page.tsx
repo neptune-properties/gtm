@@ -61,6 +61,8 @@ export default function TemplatesPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [copiedVariable, setCopiedVariable] = useState<string | null>(null);
+  const [editedSubject, setEditedSubject] = useState("");
+  const [editedBody, setEditedBody] = useState("");
 
   // Function to copy variable to clipboard
   const copyVariable = async (placeholder: string) => {
