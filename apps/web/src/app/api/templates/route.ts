@@ -30,12 +30,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const token = req.headers.get("authorization")?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Missing auth token" }, { status: 401 })
-    }
-
-    const supabase = createUserSupabaseClient(token);
+    const supabase = supabaseServer();
 
     const body = await req.json()
     const { name, subject, body_md } = body
@@ -60,11 +55,7 @@ export async function POST(req: Request) {
 
 
 export async function PUT(req: Request) {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "")
-  if (!token)
-    return NextResponse.json({ error: "Missing auth token" }, { status: 401 })
-
-  const supabase = createUserSupabaseClient(token)
+  const supabase = supabaseServer()
   const { searchParams } = new URL(req.url)
   const id = searchParams.get("id")
   const body = await req.json()
@@ -82,11 +73,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "")
-  if (!token)
-    return NextResponse.json({ error: "Missing auth token" }, { status: 401 })
-
-  const supabase = createUserSupabaseClient(token)
+  const supabase = supabaseServer()
   const { searchParams } = new URL(req.url)
   const id = searchParams.get("id")
 

@@ -9,7 +9,7 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const run = async () => {
-      const { data: { session } } = await supabaseBrowser().auth.getSession();
+      const { data: { session } } = await supabaseBrowser(false).auth.getSession();
 
       if (!session) {
         router.replace("/auth");
