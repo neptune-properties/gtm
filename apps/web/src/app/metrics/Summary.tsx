@@ -14,7 +14,7 @@ export default function Summary() {
   useEffect(() => {
     const fetchMetrics = async () => {
       // Get the total number of targets added in the last 30 days
-      const { data: targetsData, error: targetsError } = await supabaseBrowser(true)
+      const { data: targetsData, error: targetsError } = await supabaseBrowser()
         .from("targets")
         .select("id")
         .gte("created_at", new Date(new Date().setDate(new Date().getDate() - 30)).toISOString())  // Filter by last 30 days
@@ -23,7 +23,7 @@ export default function Summary() {
       }
 
       // Get the total number of emails sent (status = 'emailed')
-      const { data: emailsData, error: emailsError } = await supabaseBrowser(true)
+      const { data: emailsData, error: emailsError } = await supabaseBrowser()
         .from("targets")
         .select("id")
         .eq("status", "emailed")  // Filter by 'emailed' status
@@ -33,7 +33,7 @@ export default function Summary() {
       }
 
       // Count "replies" (status = 'replied')
-      const { data: repliesData, error: repliesError } = await supabaseBrowser(true)
+      const { data: repliesData, error: repliesError } = await supabaseBrowser()
         .from("targets")
         .select("id")
         .eq("status", "replied")  // Filter by 'replied' status
@@ -42,7 +42,7 @@ export default function Summary() {
       }
 
       // Count "conversions" (status = 'converted')
-      const { data: conversionsData, error: conversionsError } = await supabaseBrowser(true)
+      const { data: conversionsData, error: conversionsError } = await supabaseBrowser()
         .from("targets")
         .select("id")
         .eq("status", "converted")  // Filter by 'converted' status

@@ -13,7 +13,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const apiKey = process.env.BREVO_API_KEY!;
+    const apiKey = process.env.BREVO_API_KEY;
+    const fromEmail = process.env.EMAIL_FROM;
+
+    if (!apiKey || !fromEmail) {
+      console.error("Missing BREVO_API_KEY or EMAIL_FROM env var", {
+        hasApiKey: !!apiKey,
+        fromEmail,
+      });
+      return NextResponse.json(
+        { success: false, error: "Server misconfigured: missing email env vars." },
+        { status: 500 }
+      );
+    }
     
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -25,7 +37,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         sender: {
           name: "Neptune",
-          email: process.env.EMAIL_FROM!,
+          email: fromEmail,
         },
         to: [{ email: to }],
         subject,

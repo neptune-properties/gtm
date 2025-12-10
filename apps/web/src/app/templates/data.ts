@@ -16,7 +16,7 @@ const API_BASE = "/api/templates";
 
 // helper to get current access token from supabase auth
 async function getAccessToken() {
-  const supabase = supabaseBrowser(true);
+  const supabase = supabaseBrowser();
   const {
     data: { session },
   } = await supabase.auth.getSession();

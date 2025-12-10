@@ -16,7 +16,7 @@ export async function GET() {
           name: "Neptune Test",
           email: process.env.EMAIL_FROM!,
         },
-        to: [{ email: "jialig@umich.edu" }], // put your real email
+        to: [{ email: "nwlvrd@umich.edu" }], // put your real email
         subject: "Brevo Test Email",
         htmlContent: "<h1>This is a Neptune/Brevo test email</h1>",
       }),
