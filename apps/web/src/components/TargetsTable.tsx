@@ -12,7 +12,7 @@ import {
   type SortingState,
   type ColumnFiltersState,
 } from '@tanstack/react-table';
-import { supabaseBrowser } from "@/lib/supabaseClient";  // Import Supabase client for the browser
+import ApolloSearchModal from '@/app/components/apollo-search';
 
 type Target = {
   id: string;
@@ -98,7 +98,9 @@ export default function TargetsTable() {
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());  // Track selected targets
+  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());
+  const [showModal, setShowModal] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Fetch data
   useEffect(() => {
@@ -323,6 +325,12 @@ export default function TargetsTable() {
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Targets</h2>
 
+        <button onClick={() => setShowModal(!showModal)}>Toggle Apollo Search</button>
+        <ApolloSearchModal
+            open={showModal}
+            onClose={setShowModal}
+            onAdded={() => setRefreshKey((k) => k + 1)}
+          />
         {/* Export CSV Button */}
         <button
           onClick={exportCSV}
