@@ -9,13 +9,10 @@ import {
   getSortedRowModel,
   flexRender,
   type ColumnDef,
-  type SortingState,
-  type ColumnFiltersState,
 } from '@tanstack/react-table';
 
 export type Target = {
   id: string;
-  created_at: string;
   owner_name: string;
   company: string;
   property: string;
@@ -51,11 +48,12 @@ const StatusBadge = ({ status }: { status: Target['status'] }) => {
   );
 };
 
+const selectStyles = { padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' } as React.CSSProperties;
+const buttonStyles = { padding: '4px 12px', fontSize: 14, border: '1px solid #d1d5db', borderRadius: 4, backgroundColor: 'white', cursor: 'pointer' } as React.CSSProperties;
+
 export default function TargetsTable() {
   const [data, setData] = useState<Target[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
 
   useEffect(() => {
@@ -70,18 +68,15 @@ export default function TargetsTable() {
         setLoading(false);
       }
     };
-
     fetchTargets();
   }, []);
-
-
 
   const columns = useMemo<ColumnDef<Target>[]>(
     () => [
       { accessorKey: 'owner_name', header: 'Name' },
       { accessorKey: 'company', header: 'Company' },
       { accessorKey: 'property', header: 'Property' },
-      { accessorKey: 'city', header: 'City', filterFn: 'includesString' },
+      { accessorKey: 'city', header: 'City' },
       {
         accessorKey: 'email',
         header: 'Email',
@@ -140,9 +135,6 @@ export default function TargetsTable() {
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnFilters },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -171,7 +163,6 @@ export default function TargetsTable() {
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>Targets</h2>
 
-        {/* Filters */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label htmlFor="city-filter" style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
@@ -179,7 +170,7 @@ export default function TargetsTable() {
             </label>
             <select
               id="city-filter"
-              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
+              style={selectStyles}
               value={(table.getColumn('city')?.getFilterValue() as string) ?? ''}
               onChange={(e) => table.getColumn('city')?.setFilterValue(e.target.value || undefined)}
             >
@@ -198,7 +189,7 @@ export default function TargetsTable() {
             </label>
             <select
               id="status-filter"
-              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
+              style={selectStyles}
               value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
               onChange={(e) => table.getColumn('status')?.setFilterValue(e.target.value || undefined)}
             >
@@ -214,14 +205,7 @@ export default function TargetsTable() {
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'end' }}>
             <button
               onClick={() => table.resetColumnFilters()}
-              style={{
-                padding: '8px 16px',
-                fontSize: 14,
-                border: '1px solid #d1d5db',
-                borderRadius: 4,
-                backgroundColor: 'white',
-                cursor: 'pointer',
-              }}
+              style={buttonStyles}
             >
               Clear Filters
             </button>
@@ -229,7 +213,6 @@ export default function TargetsTable() {
         </div>
       </div>
 
-      {/* Table */}
       <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: 8 }}>
         <table style={{ minWidth: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ backgroundColor: '#f9fafb' }}>
@@ -277,7 +260,6 @@ export default function TargetsTable() {
         </table>
       </div>
 
-      {/* Pagination */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()} style={btn()}>

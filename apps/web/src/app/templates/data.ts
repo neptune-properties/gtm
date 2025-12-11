@@ -1,4 +1,3 @@
-// apps/web/src/app/templates/data.ts
 "use client";
 
 import { supabaseBrowser } from "@/lib/supabaseClient";
@@ -14,7 +13,6 @@ export type EmailTemplate = {
 
 const API_BASE = "/api/templates";
 
-// helper to get current access token from supabase auth
 async function getAccessToken() {
   const supabase = supabaseBrowser();
   const {
@@ -41,7 +39,6 @@ export async function getTemplates(): Promise<EmailTemplate[]> {
     throw new Error(json.error || "Failed to fetch templates");
   }
 
-  // your route seems to return { templates: [...] }
   return json.templates || [];
 }
 
