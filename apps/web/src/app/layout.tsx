@@ -15,7 +15,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
       </head>
       <body style={{ margin: 0, fontFamily: "Inter, system-ui, Arial" }}>
-        {/* Wrap everything except /auth in RequireAuth */}
         {isAuthPage ? (
           <main style={{ padding: 16 }}>{children}</main>
         ) : (
