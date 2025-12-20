@@ -51,10 +51,15 @@ const StatusBadge = ({ status }: { status: Target['status'] }) => {
 const selectStyles = { padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' } as React.CSSProperties;
 const buttonStyles = { padding: '4px 12px', fontSize: 14, border: '1px solid #d1d5db', borderRadius: 4, backgroundColor: 'white', cursor: 'pointer' } as React.CSSProperties;
 
+// ✅ Prevent bigint from ever being rendered directly as a ReactNode (TS + runtime safe)
+function safeFlexRender<TProps>(renderer: unknown, props: TProps): React.ReactNode {
+  const out = flexRender(renderer as any, props as any) as unknown;
+  return typeof out === 'bigint' ? out.toString() : (out as React.ReactNode);
+}
+
 export default function TargetsTable() {
   const [data, setData] = useState<Target[]>([]);
   const [loading, setLoading] = useState(true);
-
 
   useEffect(() => {
     const fetchTargets = async () => {
@@ -203,10 +208,7 @@ export default function TargetsTable() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'end' }}>
-            <button
-              onClick={() => table.resetColumnFilters()}
-              style={buttonStyles}
-            >
+            <button onClick={() => table.resetColumnFilters()} style={buttonStyles}>
               Clear Filters
             </button>
           </div>
@@ -236,7 +238,9 @@ export default function TargetsTable() {
                     onClick={h.column.getToggleSortingHandler()}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</span>
+                      <span>
+                        {h.isPlaceholder ? null : safeFlexRender(h.column.columnDef.header, h.getContext())}
+                      </span>
                       <span style={{ color: '#9ca3af' }}>
                         {{ asc: '↑', desc: '↓' }[h.column.getIsSorted() as string] ?? '↕'}
                       </span>
@@ -246,12 +250,16 @@ export default function TargetsTable() {
               </tr>
             ))}
           </thead>
+
           <tbody style={{ backgroundColor: 'white' }}>
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} style={{ padding: '16px 24px', whiteSpace: 'nowrap', fontSize: 14, color: '#111827' }}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  <td
+                    key={cell.id}
+                    style={{ padding: '16px 24px', whiteSpace: 'nowrap', fontSize: 14, color: '#111827' }}
+                  >
+                    {safeFlexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
               </tr>
@@ -286,7 +294,9 @@ export default function TargetsTable() {
             style={{ padding: '4px 12px', fontSize: 14, border: '1px solid #d1d5db', borderRadius: 4, outline: 'none' }}
           >
             {[10, 20, 30, 40, 50].map((n) => (
-              <option key={n} value={n}>Show {n}</option>
+              <option key={n} value={n}>
+                Show {n}
+              </option>
             ))}
           </select>
         </div>

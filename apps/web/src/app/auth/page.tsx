@@ -22,9 +22,9 @@ export default function AuthPage() {
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
-        options: {
-          persistSession: rememberMe
-        }
+        // options: {
+        //   persistSession: rememberMe
+        // }
       });
       
       if (error) throw error;

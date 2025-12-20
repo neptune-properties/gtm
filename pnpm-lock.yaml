@@ -27,9 +27,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.2
         version: 19.2.2(@types/react@19.2.2)
-      pnpm:
-        specifier: ^10.20.0
-        version: 10.20.0
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -76,12 +73,18 @@ importers:
       eslint-config-next:
         specifier: 14.2.15
         version: 14.2.15(eslint@9.39.0)(typescript@5.9.3)
+      pnpm:
+        specifier: 9.0.0
+        version: 9.0.0
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
       tailwindcss:
         specifier: ^4.1.16
         version: 4.1.16
+      turbo:
+        specifier: ^2.6.0
+        version: 2.6.0
       typescript:
         specifier: ^5.6.3
         version: 5.9.3
@@ -1354,8 +1357,8 @@ packages:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
 
-  pnpm@10.20.0:
-    resolution: {integrity: sha512-z5mYIiFi3YWGTQqBAueJLnukzq3rv1ox+cL85I384xepxTufZGTR75BCy6LgKuAqn3wUOitDjNk8kYQPAZK53Q==}
+  pnpm@9.0.0:
+    resolution: {integrity: sha512-tBBnB8ciWxdIthWVlTzL6/+XtUrQXQAqo2NfYzucU81mb3zpuLxEcE8foEi5pJtVNxqy2enWZ9Hv4u8VFLzVEw==}
     engines: {node: '>=18.12'}
     hasBin: true
 
@@ -3198,7 +3201,7 @@ snapshots:
 
   picomatch@4.0.3: {}
 
-  pnpm@10.20.0: {}
+  pnpm@9.0.0: {}
 
   possible-typed-array-names@1.1.0: {}
 
