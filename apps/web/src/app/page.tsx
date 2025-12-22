@@ -1,4 +1,4 @@
-import TargetsTable from '@/components/TargetsTable';
+import TargetsTable from '@/app/components/TargetsTable';
 
 export default function Home() {
   return (
