@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseClient";
@@ -12,15 +12,15 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
     const run = async () => {
       const { data: { session } } = await supabaseBrowser().auth.getSession();
 
-      // prevent redirect loops
       if (!session && pathname !== "/auth") {
         router.replace("/auth");
+        return;
       }
 
       setChecking(false);
     };
     run();
-  }, [router, pathname]);
+  }, [router]);
 
   if (checking) return null;
   return <>{children}</>;

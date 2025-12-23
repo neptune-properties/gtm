@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "envMode": "loose",
+  "envMode": "strict",
+  "globalEnv": ["PATH", "PNPM_HOME", "COREPACK_ROOT"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type EmailTemplate = {
   id: string;
   name: string;
@@ -14,6 +16,13 @@ export type Target = {
   email: string;
   status: 'new' | 'emailed' | 'replied' | 'called' | 'converted';
 };
+
+export const TemplateSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  subject: z.string(),
+  body_md: z.string(),
+});
 
 export const TEMPLATE_VARIABLES = [
   { name: 'company', label: 'Company', placeholder: '{{company}}' },

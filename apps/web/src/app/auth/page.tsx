@@ -21,7 +21,7 @@ export default function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
-        password
+        password,
       });
       
       if (error) throw error;

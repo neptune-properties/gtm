@@ -14,11 +14,14 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "prettier": "^3.6.2",
-    "turbo": "^2.6.0"
+    "turbo": "^2.6.1"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@tanstack/react-table": "^8.21.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "styled-components": "^6.1.19",
     "zod": "^4.1.12"
   }
 }
