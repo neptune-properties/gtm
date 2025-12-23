@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
-import Shell from "@/app/components/shell"; // we'll create this
-
-export const metadata = { title: "Neptune — GTM MVP" };
+import Shell from "@/app/components/shell";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

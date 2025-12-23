@@ -1,72 +1,31 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { z } from 'zod';
+import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { EmailTemplate, Target, TemplateSchema, TEMPLATE_VARIABLES } from '@/app/templates/types';
 
-type EmailTemplate = {
-  id: string;
-  name: string;
-  subject: string;
-  body_md: string;
-};
-
-type Target = {
-  id: string;
-  owner_name: string;
-  first_name?: string;
-  last_name?: string;
-  company: string;
-  property: string;
-  city: string;
-  email: string;
-  status: 'new' | 'emailed' | 'replied' | 'called' | 'converted';
-};
-
-const TemplateSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  subject: z.string(),
-  body_md: z.string(),
-});
-
-// Available variables for templates (from targets table columns)
-const TEMPLATE_VARIABLES = [
-  { name: 'company', label: 'Company', placeholder: '{{company}}' },
-  { name: 'property', label: 'Property', placeholder: '{{property}}' },
-  { name: 'city', label: 'City', placeholder: '{{city}}' },
-  { name: 'email', label: 'Email', placeholder: '{{email}}' },
-  { name: 'source', label: 'Source', placeholder: '{{source}}' },
-  { name: 'status', label: 'Status', placeholder: '{{status}}' },
-  { name: 'first_name', label: 'First Name', placeholder: '{{first_name}}' },
-  { name: 'last_name', label: 'Last Name', placeholder: '{{last_name}}' },
-];
 
 export default function TemplatesPage() {
-  const router = useRouter();
   const params = useSearchParams();
   const targetId = params.get('targetId') ?? '';
 
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
-  const [selected, setSelected] = useState<EmailTemplate | null>(null);
   const [target, setTarget] = useState<Target | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Template CRUD state
   const [showCRUD, setShowCRUD] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [formData, setFormData] = useState({ name: '', subject: '', body_md: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [copiedVariable, setCopiedVariable] = useState<string | null>(null);
 
-  // Per-send manual edits
+  const selected = templates.find((x) => x.id === selectedId) || null;
   const [editedSubject, setEditedSubject] = useState('');
   const [editedBody, setEditedBody] = useState('');
+  const [copiedVariable, setCopiedVariable] = useState<string | null>(null);
 
-  // Function to copy variable to clipboard
   const copyVariable = async (placeholder: string) => {
     try {
       await navigator.clipboard.writeText(placeholder);
@@ -77,19 +36,12 @@ export default function TemplatesPage() {
     }
   };
 
-  // Extract variables used in template
   const usedVariables = useMemo(() => {
-    const variables: string[] = [];
     const text = `${formData.subject} ${formData.body_md}`;
     const matches = text.match(/\{\{[^}]+\}\}/g);
-    if (matches) {
-      const uniqueVars = [...new Set(matches)];
-      return uniqueVars;
-    }
-    return variables;
+    return matches ? [...new Set(matches)] : [];
   }, [formData.subject, formData.body_md]);
 
-  // load templates
   useEffect(() => {
     (async () => {
       try {
@@ -103,21 +55,17 @@ export default function TemplatesPage() {
     })();
   }, []);
 
-  // load target from URL parameters
   useEffect(() => {
     const targetName = params.get('targetName');
-    const targetCompany = params.get('targetCompany');
-    const targetProperty = params.get('targetProperty');
     const targetEmail = params.get('targetEmail');
-    const targetCity = params.get('targetCity');
 
     if (targetId && targetName && targetEmail) {
       setTarget({
         id: targetId,
         owner_name: targetName,
-        company: targetCompany || '',
-        property: targetProperty || '',
-        city: targetCity || '',
+        company: params.get('targetCompany') || '',
+        property: params.get('targetProperty') || '',
+        city: params.get('targetCity') || '',
         email: targetEmail,
         status: 'new' as const,
       });
@@ -125,54 +73,15 @@ export default function TemplatesPage() {
   }, [params, targetId]);
 
   useEffect(() => {
-    const t = templates.find((x) => x.id === selectedId) || null;
-    setSelected(t);
-  }, [selectedId, templates]);
-
-  // Substitution logic (what the template would look like before manual edits)
-  const substituted = useMemo(() => {
-    if (!selected || !target) return { subject: '', body: '' };
-
-    // Derive first_name / last_name from owner_name
-    const fullName = target.owner_name || '';
-    const nameParts = fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ');
-
-    const data = {
-      owner_name: fullName,
-      first_name: firstName,
-      last_name: lastName,
-      name: firstName || fullName, // legacy {{name}} support
-      company: target.company || '',
-      property: target.property || '',
-      city: target.city || '',
-      email: target.email || '',
-    };
-
-    let subject = selected.subject;
-    let body = selected.body_md;
-
-    // Replace Mustache-style placeholders {{key}}
-    Object.entries(data).forEach(([key, value]) => {
-      const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
-      subject = subject.replace(placeholder, value);
-      body = body.replace(placeholder, value);
-    });
-
-    return { subject, body };
-  }, [selected, target]);
-
-  // When template/target/substituted changes, reset editable fields
-  useEffect(() => {
-    if (selected && target) {
-      setEditedSubject(substituted.subject);
-      setEditedBody(substituted.body);
-    } else {
-      setEditedSubject('');
-      setEditedBody('');
-    }
-  }, [substituted.subject, substituted.body, selected, target]);
+    const sel = templates.find((x) => x.id === selectedId) || null;
+      if (sel) {
+        setEditedSubject(sel.subject ?? '');
+        setEditedBody(sel.body_md ?? '');
+      } else {
+        setEditedSubject('');
+        setEditedBody('');
+      }
+    }, [selectedId, templates]);
 
   async function handleSendEmail() {
     setError(null);
@@ -187,12 +96,17 @@ export default function TemplatesPage() {
       return;
     }
 
-    const subjectToSend = editedSubject || substituted.subject;
-    const bodyToSend = editedBody || substituted.body;
+    const subjectToSend = editedSubject ?? selected.subject;
+    const bodyToSend = editedBody ?? selected.body_md;
+
+    if (!subjectToSend.trim() || !bodyToSend.trim()) {
+      setError('Subject and body cannot be empty.');
+      return;
+    }
 
     setSending(true);
     try {
-      const res = await fetch('/api/email/send', {
+      const sendRes = await fetch('/api/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -202,16 +116,13 @@ export default function TemplatesPage() {
         }),
       });
 
-      const data = await res.json();
+      const sendJson = await sendRes.json().catch(() => ({}));
 
-      if (!data.success) {
-        throw new Error(data.error || 'Email failed to send.');
+      if (!sendRes.ok || !sendJson.success) {
+        throw new Error(sendJson.error || 'Email failed to send.');
       }
 
-      alert('Email sent successfully!');
-
-      // Update email_sends + status
-      await fetch('/api/email-sends', {
+      const logRes = await fetch('/api/email-sends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -222,16 +133,22 @@ export default function TemplatesPage() {
         }),
       });
 
-      router.push('/');
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Send failed');
+      const logJson = await logRes.json().catch(() => ({}));
+
+      if (!logRes.ok) {
+        throw new Error(logJson.error || 'Failed to record email send.');
+      }
+
+      alert('Email sent!');
+    } catch (e: any) {
+      console.error(e);
+      setError(e?.message || 'Send failed');
     } finally {
       setSending(false);
     }
   }
 
-  // Template CRUD Functions
+
   function handleNewTemplate() {
     setEditingTemplate(null);
     setFormData({ name: '', subject: '', body_md: '' });
@@ -260,7 +177,6 @@ export default function TemplatesPage() {
     setSaving(true);
     try {
       if (editingTemplate) {
-        // Update existing template
         const res = await fetch(`/api/templates?id=${editingTemplate.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -279,7 +195,6 @@ export default function TemplatesPage() {
           )
         );
       } else {
-        // Create new template
         const res = await fetch('/api/templates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -295,7 +210,6 @@ export default function TemplatesPage() {
         setTemplates([json.template, ...templates]);
       }
 
-      // Reset to new template view instead of closing CRUD
       setFormData({ name: '', subject: '', body_md: '' });
       setEditingTemplate(null);
     } catch (e: any) {
@@ -322,7 +236,6 @@ export default function TemplatesPage() {
       setTemplates(templates.filter((t) => t.id !== id));
       if (selectedId === id) {
         setSelectedId('');
-        setSelected(null);
       }
     } catch (e: any) {
       console.error(e);
@@ -346,41 +259,241 @@ export default function TemplatesPage() {
 
   return (
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
-      {/* Top header + "New" button when NOT in CRUD mode */}
+      {/* Send Email Mode */}
       {!showCRUD && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}
-        >
-          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
-            Templates
-          </h1>
-          <button
-            onClick={() => {
-              handleNewTemplate();
-              setShowCRUD(true);
-            }}
+        <>
+          <div
             style={{
-              backgroundColor: '#4ade80',
-              color: 'white',
-              padding: '10px 20px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
             }}
           >
-            + New
-          </button>
-        </div>
+            <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
+              Templates
+            </h1>
+            <button
+              onClick={() => {
+                handleNewTemplate(); // clears
+                setShowCRUD(true);
+              }}
+              style={{
+                backgroundColor: '#4ade80',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+              }}
+            >
+              + New
+            </button>
+          </div>
+          <section
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '24px',
+            }}
+          >
+            {/* Left: controls */}
+            <div
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: '500',
+                    marginBottom: '8px',
+                  }}
+                >
+                  Select Template
+                </h2>
+                <select
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '4px',
+                    padding: '8px',
+                    width: '100%',
+                    outline: 'none',
+                  }}
+                  value={selectedId}
+                  onChange={(e) => setSelectedId(e.target.value)}
+                >
+                  <option value="">— Choose a template —</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div
+                style={{
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px',
+                  padding: '12px',
+                  backgroundColor: '#f9fafb',
+                }}
+              >
+                <h3 style={{ fontWeight: '600', marginBottom: '8px' }}>
+                  Target Info
+                </h3>
+                {!target ? (
+                  <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                    {targetId
+                      ? 'Loading…'
+                      : 'Open this page via "Send Email" from Targets.'}
+                  </p>
+                ) : (
+                  <div style={{ fontSize: '14px', color: '#374151' }}>
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>Name:</strong> {target.owner_name}
+                    </div>
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>Email:</strong> {target.email}
+                    </div>
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>Company:</strong> {target.company}
+                    </div>
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>Property:</strong> {target.property}
+                    </div>
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>City:</strong> {target.city}
+                    </div>
+                    <div>
+                      <strong>Status:</strong> {target.status}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                disabled={!selected || !target || sending}
+                onClick={handleSendEmail}
+                style={{
+                  backgroundColor:
+                    !selected || !target || sending ? '#9ca3af' : '#16a34a',
+                  color: 'white',
+                  borderRadius: '4px',
+                  padding: '8px 16px',
+                  border: 'none',
+                  cursor:
+                    !selected || !target || sending ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                {sending ? 'Sending…' : 'Send Email'}
+              </button>
+
+              {error && (
+                <p style={{ color: '#dc2626', fontSize: '14px' }}>{error}</p>
+              )}
+            </div>
+
+            {/* Right: preview + editing */}
+            <div
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                padding: '16px',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '500',
+                  marginBottom: '12px',
+                }}
+              >
+                Preview & Edit
+              </h2>
+              {!selected || !target ? (
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                  Pick a template to preview.
+                </p>
+              ) : (
+                <div
+                  style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        textTransform: 'uppercase',
+                        color: '#6b7280',
+                        marginBottom: '4px',
+                      }}
+                    >
+                      Subject
+                    </div>
+                    <input
+                      type="text"
+                      value={editedSubject}
+                      onChange={(e) => setEditedSubject(e.target.value)}
+                      style={{
+                        width: '97%',
+                        padding: '8px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        backgroundColor: '#f9fafb',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        textTransform: 'uppercase',
+                        color: '#6b7280',
+                        marginBottom: '4px',
+                      }}
+                    >
+                      Body
+                    </div>
+                    <textarea
+                      value={editedBody}
+                      onChange={(e) => setEditedBody(e.target.value)}
+                      rows={10}
+                      style={{
+                        width: '95.5%',
+                        whiteSpace: 'pre-wrap',
+                        fontSize: '14px',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        backgroundColor: '#f9fafb',
+                        margin: 0,
+                        fontFamily: 'inherit',
+                        outline: 'none',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+          </>
       )}
 
-      {/* Template CRUD Section */}
       {showCRUD && (
         <div style={{ marginBottom: '32px' }}>
           <div
@@ -437,7 +550,6 @@ export default function TemplatesPage() {
               gap: '16px',
             }}
           >
-            {/* Left Column: Variables */}
             <div
               style={{
                 border: '1px solid #e5e7eb',
@@ -470,7 +582,6 @@ export default function TemplatesPage() {
                 Click on a block to copy
               </p>
 
-              {/* Copy status button */}
               <div
                 style={{
                   padding: '10px 14px',
@@ -527,7 +638,6 @@ export default function TemplatesPage() {
               </div>
             </div>
 
-            {/* Middle Column: Edit Template */}
             <div
               style={{
                 border: '1px solid #e5e7eb',
@@ -646,7 +756,6 @@ export default function TemplatesPage() {
                   />
                 </div>
 
-                {/* Subject */}
                 <div>
                   <label
                     style={{
@@ -686,7 +795,6 @@ export default function TemplatesPage() {
                   />
                 </div>
 
-                {/* Body */}
                 <div>
                   <label
                     style={{
@@ -729,7 +837,6 @@ export default function TemplatesPage() {
                   />
                 </div>
 
-                {/* Used Variables */}
                 {usedVariables.length > 0 && (
                   <div
                     style={{
@@ -758,7 +865,6 @@ export default function TemplatesPage() {
                   </div>
                 )}
 
-                {/* Action Buttons */}
                 <div
                   style={{
                     display: 'flex',
@@ -805,7 +911,6 @@ export default function TemplatesPage() {
               </div>
             </div>
 
-            {/* Right Column: Preview (CRUD form preview) */}
             <div
               style={{
                 border: '1px solid #e5e7eb',
@@ -877,7 +982,6 @@ export default function TemplatesPage() {
             </div>
           </div>
 
-          {/* Existing Templates List Below */}
           <div style={{ marginTop: '32px' }}>
             <h3
               style={{
@@ -1011,207 +1115,6 @@ export default function TemplatesPage() {
           </div>
         </div>
       )}
-
-      {/* Always-visible Send section (no duplication now) */}
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '24px',
-        }}
-      >
-        {/* Left: controls */}
-        <div
-          style={{
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            backgroundColor: 'white',
-            padding: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                fontSize: '18px',
-                fontWeight: '500',
-                marginBottom: '8px',
-              }}
-            >
-              Select Template
-            </h2>
-            <select
-              style={{
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-                padding: '8px',
-                width: '100%',
-                outline: 'none',
-              }}
-              value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
-            >
-              <option value="">— Choose a template —</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div
-            style={{
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              padding: '12px',
-              backgroundColor: '#f9fafb',
-            }}
-          >
-            <h3 style={{ fontWeight: '600', marginBottom: '8px' }}>
-              Target Info
-            </h3>
-            {!target ? (
-              <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                {targetId
-                  ? 'Loading…'
-                  : 'Open this page via "Send Email" from Targets.'}
-              </p>
-            ) : (
-              <div style={{ fontSize: '14px', color: '#374151' }}>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Name:</strong> {target.owner_name}
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Email:</strong> {target.email}
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Company:</strong> {target.company}
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Property:</strong> {target.property}
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>City:</strong> {target.city}
-                </div>
-                <div>
-                  <strong>Status:</strong> {target.status}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button
-            disabled={!selected || !target || sending}
-            onClick={handleSendEmail}
-            style={{
-              backgroundColor:
-                !selected || !target || sending ? '#9ca3af' : '#16a34a',
-              color: 'white',
-              borderRadius: '4px',
-              padding: '8px 16px',
-              border: 'none',
-              cursor:
-                !selected || !target || sending ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-            }}
-          >
-            {sending ? 'Sending…' : 'Send Email'}
-          </button>
-
-          {error && (
-            <p style={{ color: '#dc2626', fontSize: '14px' }}>{error}</p>
-          )}
-        </div>
-
-        {/* Right: preview + editing */}
-        <div
-          style={{
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            backgroundColor: 'white',
-            padding: '16px',
-          }}
-        >
-          <h2
-            style={{
-              fontSize: '18px',
-              fontWeight: '500',
-              marginBottom: '12px',
-            }}
-          >
-            Preview & Edit
-          </h2>
-          {!selected || !target ? (
-            <p style={{ fontSize: '14px', color: '#6b7280' }}>
-              Pick a template to preview.
-            </p>
-          ) : (
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    textTransform: 'uppercase',
-                    color: '#6b7280',
-                    marginBottom: '4px',
-                  }}
-                >
-                  Subject
-                </div>
-                <input
-                  type="text"
-                  value={editedSubject}
-                  onChange={(e) => setEditedSubject(e.target.value)}
-                  style={{
-                    width: '97%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px',
-                    backgroundColor: '#f9fafb',
-                    fontSize: '14px',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    textTransform: 'uppercase',
-                    color: '#6b7280',
-                    marginBottom: '4px',
-                  }}
-                >
-                  Body
-                </div>
-                <textarea
-                  value={editedBody}
-                  onChange={(e) => setEditedBody(e.target.value)}
-                  rows={10}
-                  style={{
-                    width: '95.5%',
-                    whiteSpace: 'pre-wrap',
-                    fontSize: '14px',
-                    padding: '12px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px',
-                    backgroundColor: '#f9fafb',
-                    margin: 0,
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    resize: 'vertical',
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
     </main>
   );
 }
